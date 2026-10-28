@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="36" viewBox="0 0 200 36">
+  <rect x="0" y="4" width="28" height="28" rx="7" fill="#3987e5"/>
+  <path d="M8 23 L13 15 L17 19 L21 11" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="38" y="24" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" letter-spacing="2" fill="#eef0f3">NFL EDGE</text>
+</svg>
