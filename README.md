@@ -19,21 +19,50 @@ Run the tests (settlement logic, independent recomputation against the raw CSV, 
 python -m pytest tests -q
 ```
 
-## Standalone HTML dashboard
+## Interactive HTML dashboard (main deliverable)
 
-`dashboard/nfl_edge_dashboard.html` is a single self-contained file (data, d3 and the app inlined, about 760 KB).
+`dashboard/nfl_edge_dashboard.html` is a single self-contained file (data, d3 and the app inlined, about 980 KB).
 Open it in any browser, online or offline. To rebuild it after refreshing the data:
 
 ```bash
-python dashboard/build.py
+python scripts/fetch_data.py   # refresh data/raw/games.csv
+python dashboard/build.py      # rebuild the HTML file
 ```
 
-Source lives in `dashboard/src/` (`core.js` data and statistics, `charts.js` chart library, `views.js` tabs).
-It adds three things to the Streamlit app:
+**Global filters** (one bar, applied to every tab): season range, date range, game type (regular season /
+playoffs), market (spread / total / moneyline), team, and neutral-site games. Active filters appear as chips
+that remove themselves with one click, and **Reset filters** restores everything.
 
-- **The story:** a guided, five-chapter narrative computed live from the data, each chapter linking to the full view.
-- **Variability everywhere:** a 95% range (Wilson score interval for rates, ±1.96 standard errors for averages) on every rate and trend, plus a **Signal vs. noise** tab with a funnel plot, a coin-flip simulator and a season-to-season persistence check.
-- **Cross-filtering:** click a season to zoom in, a heatmap cell or bar to list its games, a team to open its profile, and a game for its detail panel. The view is kept in the URL, so it can be bookmarked.
+**Tabs**
+
+1. **Overview:** the eight headline figures (each with a 95% range and a sparkline), a "what changed" table that
+   tests whether each change since the first season is bigger than chance, an automatic "worth investigating" scan,
+   and charts for scoring, who wins, results against the line (following the market filter) and variability
+   (margin distribution, box plots, season × week heatmap), plus a chart-any-measure explorer.
+2. **The story:** six chapters computed live from every season, each with one chart and a button into the full view,
+   ending with takeaways for reading betting trends.
+3. **Team analytics:** a profile (records with 95% ranges, home/away and favorite/underdog charts, every game against
+   the line, splits, season-by-season and a sortable game log), a two-team comparison that flags real differences,
+   and league rankings.
+4. **Betting trends:** against the spread, over/under and favorites vs. underdogs, with break-even lines at the
+   closing prices, spread and total ranges, venue × role, team rankings and outcome distributions.
+5. **Trend lab:** an "Is this trend real?" tester (any side, team, opponent, spread range, total range, division and
+   rest situation, judged against 50% or the price-implied chance and against break-even, season by season), the
+   full list of situations the scan tests (it reports how many would pass by luck alone), a funnel plot,
+   a coin-flip simulator and a season-to-season persistence check.
+6. **Game explorer:** every game with filters (team, opponent, home/away, favorite/underdog, situation, division,
+   straight-up, spread and total results, spread and total ranges, season, week, search), sortable columns that
+   follow the market filter, CSV export, and a detail panel (lines, settlement, records going in, rest, weather,
+   earlier meetings, how favorites did at the same spread).
+7. **Odds & market:** an itemized list of the analyses the data cannot support (opening lines, line movement,
+   sportsbook comparisons), then closing lines against outcomes per market, key numbers, price calibration,
+   bookmaker margin and results against market expectation by team.
+8. **Data explorer:** file and column inventory with missing-value counts, live data-quality checks (duplicates,
+   cross-checks against the source's own result and total columns, spread sign convention), markets and sportsbooks,
+   a data dictionary, and a searchable, sortable, exportable table of the underlying records.
+
+Source lives in `dashboard/src/`: `core.js` (data, statistics, filters, trend engine), `charts.js` (chart library),
+`ui.js` (shared builders), one `tab_*.js` per tab, and `shell.js` (header, filters, events).
 
 ## Data
 
