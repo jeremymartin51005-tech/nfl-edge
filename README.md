@@ -19,6 +19,22 @@ Run the tests (settlement logic, independent recomputation against the raw CSV, 
 python -m pytest tests -q
 ```
 
+## Standalone HTML dashboard
+
+`dashboard/nfl_edge_dashboard.html` is a single self-contained file (data, d3 and the app inlined, about 760 KB).
+Open it in any browser, online or offline. To rebuild it after refreshing the data:
+
+```bash
+python dashboard/build.py
+```
+
+Source lives in `dashboard/src/` (`core.js` data and statistics, `charts.js` chart library, `views.js` tabs).
+It adds three things to the Streamlit app:
+
+- **The story:** a guided, five-chapter narrative computed live from the data, each chapter linking to the full view.
+- **Variability everywhere:** a 95% range (Wilson score interval for rates, ±1.96 standard errors for averages) on every rate and trend, plus a **Signal vs. noise** tab with a funnel plot, a coin-flip simulator and a season-to-season persistence check.
+- **Cross-filtering:** click a season to zoom in, a heatmap cell or bar to list its games, a team to open its profile, and a game for its detail panel. The view is kept in the URL, so it can be bookmarked.
+
 ## Data
 
 | | |
