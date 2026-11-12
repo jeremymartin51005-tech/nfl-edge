@@ -5,6 +5,27 @@ It describes what happened and is **not** a prediction tool. It does not model o
 
 Built with Python, Streamlit, Pandas and Plotly.
 
+## Standalone HTML dashboard
+
+`dashboard/nfl_dashboard.html` is a single self-contained file (data and charting library embedded) that opens in any browser, with no Python or internet needed. It is organised around seven questions:
+
+| Tab | Questions answered |
+|---|---|
+| Overview | Headline KPIs, a one-line answer to each question, metric definitions |
+| Team ATS | 1. Which teams cover the spread most often (all games / as favorite / as underdog)? |
+| Favorites & Home Field | 5. How does the favorite's cover rate change as the spread grows? 7. Do home teams or favorites cover more often? |
+| Scoring & Stadiums | 2. Indoor vs. outdoor totals and over/under, by stadium. 4. Is league scoring rising or falling? |
+| Margin of Victory | 3. Divisional vs. non-divisional, playoff and prime-time margins. 6. Margin by week of the season |
+| Game Log | Searchable, sortable, downloadable list of games |
+
+Global filters: season range, regular season / playoffs, division, team. Pushes are excluded from cover % and over % and shown in the W-L-P record.
+
+Rebuild after refreshing the data:
+
+```bash
+python scripts/build_dashboard.py   # dashboard/template.html + data/raw/games.csv -> dashboard/nfl_dashboard.html
+```
+
 ## Quick start
 
 ```bash

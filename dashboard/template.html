@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NFL Edge Dashboard</title>
+<script>/*__CHARTJS__*/</script>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f4f4f2;
+  --surface: #fcfcfb;
+  --surface-2: #f0f0ed;
+  --border: #e2e1dc;
+  --grid: #ebeae6;
+  --text: #0b0b0b;
+  --text-2: #52514e;
+  --muted: #7a7974;
+  --s1: #2a78d6;      /* series 1: blue  — favorite / home / primary */
+  --s2: #eb6834;      /* series 2: orange — underdog / away / comparison */
+  --s3: #1baf7a;      /* series 3: aqua */
+  --neutral: #b4b3ad; /* below break-even / de-emphasised */
+  --accent-bg: #e6f0fc;
+  --good: #1f8a4c;
+  --bad: #c43d3d;
+  --shadow: 0 1px 2px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #111110; --surface: #1a1a19; --surface-2: #232321; --border: #2f2f2c; --grid: #2a2a27;
+    --text: #f0efec; --text-2: #c3c2b7; --muted: #8d8c84;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --neutral: #55544f; --accent-bg: #1a2a40;
+    --good: #43c07a; --bad: #e66767; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111110; --surface: #1a1a19; --surface-2: #232321; --border: #2f2f2c; --grid: #2a2a27;
+  --text: #f0efec; --text-2: #c3c2b7; --muted: #8d8c84;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --neutral: #55544f; --accent-bg: #1a2a40;
+  --good: #43c07a; --bad: #e66767; --shadow: none;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 Inter, -apple-system, "Segoe UI", Roboto, sans-serif; }
+button, select, input { font: inherit; color: inherit; }
+.wrap { max-width: 1320px; margin: 0 auto; padding: 0 20px 48px; }
+
+/* Header */
+header .wrap { padding-bottom: 0; }
+header { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 20; }
+.top { display: flex; align-items: center; gap: 14px; padding: 14px 0 10px; }
+.logo { width: 30px; height: 30px; border-radius: 8px; background: var(--s1); display: grid; place-items: center; flex: none; }
+.brand h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: .02em; }
+.brand p { margin: 0; color: var(--text-2); font-size: 12.5px; }
+.top .sp { flex: 1; }
+.icon-btn { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 12.5px; }
+nav.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+nav.tabs button { background: none; border: 0; padding: 10px 14px; cursor: pointer; color: var(--text-2); border-bottom: 2px solid transparent; white-space: nowrap; font-weight: 500; }
+nav.tabs button:hover { color: var(--text); }
+nav.tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--s1); font-weight: 600; }
+
+/* Filter bar */
+.filters { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; padding: 14px 0 6px; }
+.f { display: flex; flex-direction: column; gap: 3px; }
+.f label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+.f select, .f input { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px; min-width: 120px; }
+.f select:focus, .f input:focus, button:focus-visible { outline: 2px solid var(--s1); outline-offset: 1px; }
+.reset { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; cursor: pointer; color: var(--text-2); }
+.summary { color: var(--text-2); font-size: 12.5px; padding: 2px 0 14px; }
+.summary b { color: var(--text); }
+
+/* Layout */
+.page { display: none; }
+.page.on { display: block; }
+.intro { margin: 2px 0 16px; }
+.intro h2 { margin: 0 0 2px; font-size: 20px; }
+.intro p { margin: 0; color: var(--text-2); max-width: 780px; }
+.qtag { display: inline-block; font-size: 11px; font-weight: 600; color: var(--s1); background: var(--accent-bg); border-radius: 999px; padding: 2px 8px; margin-right: 6px; vertical-align: 2px; }
+.grid { display: grid; gap: 14px; }
+.g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.kpis { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-bottom: 16px; }
+@media (max-width: 900px) { .g2, .g3 { grid-template-columns: 1fr; } }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); min-width: 0; }
+.card h3 { margin: 0; font-size: 15px; font-weight: 600; }
+.card .sub { margin: 2px 0 12px; color: var(--text-2); font-size: 12.5px; }
+.chart { position: relative; height: 300px; }
+.chart.tall { height: 640px; }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow); }
+.kpi .l { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-2); font-weight: 600; }
+.kpi .v { font-size: 24px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.kpi .s { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.section-title { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; margin: 22px 0 10px; }
+
+/* Answer cards */
+.answers { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.answer { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow); }
+.answer .q { font-size: 12px; color: var(--text-2); font-weight: 600; }
+.answer .q .num { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent-bg); color: var(--s1); font-size: 11px; margin-right: 6px; }
+.answer .a { font-size: 14.5px; }
+.answer .a b { font-variant-numeric: tabular-nums; }
+.answer button { align-self: flex-start; margin-top: auto; background: none; border: 0; color: var(--s1); cursor: pointer; padding: 0; font-weight: 600; font-size: 12.5px; }
+
+/* Segmented control */
+.seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; padding: 2px; gap: 2px; }
+.seg button { border: 0; background: none; padding: 5px 12px; border-radius: 7px; cursor: pointer; color: var(--text-2); font-size: 13px; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+.toolbar .hint { color: var(--muted); font-size: 12px; }
+
+/* Legend */
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--text-2); margin: -4px 0 10px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.legend i.line { height: 2px; width: 14px; border-radius: 1px; }
+
+/* Compare tiles (indoor/outdoor) */
+.vs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.vs .side { border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+.vs .side h4 { margin: 0 0 6px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.vs .row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; border-top: 1px dashed var(--border); }
+.vs .row:first-of-type { border-top: 0; }
+.vs .row b { font-variant-numeric: tabular-nums; }
+
+/* Tables */
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; cursor: pointer; user-select: none; }
+th.num, td.num { text-align: right; }
+th[data-sort]::after { content: " ↕"; opacity: .35; }
+th.asc::after { content: " ↑"; opacity: 1; }
+th.desc::after { content: " ↓"; opacity: 1; }
+td { padding: 7px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+tr:hover td { background: var(--surface-2); }
+tr.hl td { background: var(--accent-bg); }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 600; border: 1px solid var(--border); }
+.pill.good { color: var(--good); }
+.pill.bad { color: var(--bad); }
+.pill.mute { color: var(--muted); }
+.pager { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 10px; font-size: 12.5px; color: var(--text-2); }
+.pager button, .btn { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 5px 11px; cursor: pointer; }
+.pager button:disabled { opacity: .4; cursor: default; }
+
+details.defs { margin-top: 22px; }
+details.defs summary { cursor: pointer; font-weight: 600; }
+details.defs dl { display: grid; grid-template-columns: 200px 1fr; gap: 6px 16px; margin: 12px 0 0; font-size: 13px; }
+details.defs dt { font-weight: 600; }
+details.defs dd { margin: 0; color: var(--text-2); }
+@media (max-width: 700px) { details.defs dl { grid-template-columns: 1fr; } .wrap { padding: 0 16px 40px; } }
+.note { font-size: 12px; color: var(--muted); margin-top: 8px; }
+.empty { padding: 40px; text-align: center; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div class="logo" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M2 13 L7 6 L10.5 9.5 L16 3" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="brand">
+        <h1>NFL EDGE</h1>
+        <p>Historical NFL results vs. closing betting lines</p>
+      </div>
+      <div class="sp"></div>
+      <button class="icon-btn" id="themeBtn" title="Toggle light / dark">Light / dark</button>
+    </div>
+    <nav class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
+      <button role="tab" data-tab="teams">Team ATS</button>
+      <button role="tab" data-tab="lines">Favorites &amp; Home Field</button>
+      <button role="tab" data-tab="scoring">Scoring &amp; Stadiums</button>
+      <button role="tab" data-tab="margins">Margin of Victory</button>
+      <button role="tab" data-tab="log">Game Log</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="filters" id="filters">
+    <div class="f"><label for="fFrom">From season</label><select id="fFrom"></select></div>
+    <div class="f"><label for="fTo">To season</label><select id="fTo"></select></div>
+    <div class="f"><label for="fType">Games</label>
+      <select id="fType"><option value="all">Regular + playoffs</option><option value="REG">Regular season</option><option value="POST">Playoffs only</option></select></div>
+    <div class="f"><label for="fDiv">Division</label><select id="fDiv"></select></div>
+    <div class="f"><label for="fTeam">Team</label><select id="fTeam"></select></div>
+    <button class="reset" id="resetBtn">Reset filters</button>
+  </div>
+  <div class="summary" id="summary"></div>
+
+  <!-- OVERVIEW -->
+  <section class="page on" id="p-overview">
+    <div class="kpis" id="ovKpis"></div>
+    <div class="section-title">Answers to the 7 questions (update with filters)</div>
+    <div class="answers" id="ovAnswers"></div>
+    <details class="defs">
+      <summary>How each metric is calculated</summary>
+      <dl>
+        <dt>Cover % (ATS)</dt><dd>Covers ÷ (covers + non-covers). <b>Pushes are left out</b> of the percentage and shown separately in the record (W-L-P). 52.4% is roughly the break-even rate at standard −110 odds.</dd>
+        <dt>Over %</dt><dd>Overs ÷ (overs + unders). Pushes (final total exactly equal to the line) are left out and shown in the record.</dd>
+        <dt>Favorite / Underdog</dt><dd>The side favored by the closing point spread. If the spread is 0 (pick'em), the team with the shorter moneyline is the favorite.</dd>
+        <dt>Spread &amp; totals</dt><dd>One consensus <b>closing</b> line per game from the nflverse dataset. No opening lines are available.</dd>
+        <dt>Margin of victory</dt><dd>Absolute point difference between the two teams. Ties count as 0.</dd>
+        <dt>Home-field advantage</dt><dd>Average home score minus away score. Neutral-site games (international games, Super Bowls) are excluded from all home/away stats.</dd>
+        <dt>Indoor / Outdoor</dt><dd>Indoor = dome or retractable roof closed. Outdoor = open-air stadium or retractable roof open.</dd>
+        <dt>Prime time</dt><dd>Kickoff at 7:00 PM ET or later (Thursday, Sunday and Monday night games, plus late Saturday/holiday games).</dd>
+        <dt>Divisional game</dt><dd>Both teams are in the same division (current 8-division alignment).</dd>
+        <dt>Team / Division filters</dt><dd>Keep only games involving that team (or any team in that division). On the Team ATS tab they instead choose which teams appear and highlight the selected team.</dd>
+      </dl>
+    </details>
+  </section>
+
+  <!-- TEAMS -->
+  <section class="page" id="p-teams">
+    <div class="intro"><h2><span class="qtag">Q1</span>Which teams cover the spread most often?</h2>
+      <p>Each team's against-the-spread cover rate. Switch between all games, games as the favorite and games as the underdog. Use the Season and Division filters above to narrow it down.</p></div>
+    <div class="toolbar">
+      <div class="seg" id="teamRole">
+        <button aria-pressed="true" data-v="all">All games</button>
+        <button aria-pressed="false" data-v="fav">As favorite</button>
+        <button aria-pressed="false" data-v="dog">As underdog</button>
+      </div>
+      <span class="hint">Dashed line = 50%. Bars in blue covered more than half the time.</span>
+    </div>
+    <div class="grid g2" style="align-items:start">
+      <div class="card"><h3 id="teamChartTitle">ATS cover % by team</h3><p class="sub" id="teamChartSub"></p>
+        <div class="chart tall"><canvas id="cTeams"></canvas></div></div>
+      <div class="card"><h3>Team ATS table</h3><p class="sub">Click a column header to sort.</p>
+        <div class="tbl-wrap" id="teamTable"></div></div>
+    </div>
+  </section>
+
+  <!-- LINES -->
+  <section class="page" id="p-lines">
+    <div class="intro"><h2><span class="qtag">Q5</span><span class="qtag">Q7</span>Favorites, spread size &amp; home field</h2>
+      <p>Does a bigger spread make a favorite more likely to cover? And who covers more often: home teams or favorites?</p></div>
+    <div class="kpis" id="hfKpis"></div>
+    <div class="grid g2">
+      <div class="card"><h3>Favorite results by size of the spread</h3>
+        <p class="sub">Win % climbs as favorites get bigger, but does their cover %?</p>
+        <div class="legend"><span><i style="background:var(--s1)"></i>Favorite cover % (ATS)</span><span><i style="background:var(--s2)"></i>Favorite win % (straight up)</span></div>
+        <div class="chart"><canvas id="cSpread"></canvas></div>
+        <p class="note">Bucket labels are the favorite's closing spread in points; n = games in each bucket.</p></div>
+      <div class="card"><h3>Who covers more often?</h3>
+        <p class="sub">ATS cover % by role. Blue = above 50%. Axis runs 30–70% to make small gaps visible.</p>
+        <div class="chart"><canvas id="cWho"></canvas></div></div>
+    </div>
+    <div class="grid" style="margin-top:14px">
+      <div class="card"><h3>Home-field advantage by season</h3>
+        <p class="sub">Average home-team point margin (points) and home ATS cover %, one bar per season</p>
+        <div class="grid g2">
+          <div><div class="legend"><span><i style="background:var(--s1)"></i>Avg home margin (pts)</span></div><div class="chart" style="height:240px"><canvas id="cHfaPts"></canvas></div></div>
+          <div><div class="legend"><span><i style="background:var(--s3)"></i>Home cover %</span></div><div class="chart" style="height:240px"><canvas id="cHfaAts"></canvas></div></div>
+        </div></div>
+    </div>
+  </section>
+
+  <!-- SCORING -->
+  <section class="page" id="p-scoring">
+    <div class="intro"><h2><span class="qtag">Q2</span><span class="qtag">Q4</span>Scoring trends, indoor vs. outdoor, and stadiums</h2>
+      <p>Is the league scoring more or less over time, and do indoor games produce more points and more overs?</p></div>
+    <div class="grid g2">
+      <div class="card"><h3>Points per game by season</h3>
+        <p class="sub">Combined points actually scored vs. the average closing total</p>
+        <div class="legend"><span><i class="line" style="background:var(--s1)"></i>Actual combined points</span><span><i class="line" style="background:var(--s2)"></i>Avg closing total (O/U line)</span></div>
+        <div class="chart"><canvas id="cTrend"></canvas></div>
+        <p class="note" id="trendNote"></p></div>
+      <div class="card"><h3>Indoor vs. outdoor</h3>
+        <p class="sub">Totals and over/under results by stadium type</p>
+        <div class="vs" id="vsTiles"></div>
+        <div class="legend" style="margin-top:14px"><span><i style="background:var(--s1)"></i>Avg combined points</span><span><i style="background:var(--s2)"></i>Avg closing total</span></div>
+        <div class="chart" style="height:200px"><canvas id="cRoof"></canvas></div></div>
+    </div>
+    <div class="card" style="margin-top:14px"><h3>Stadiums</h3>
+      <p class="sub">Every stadium in the filtered games. Sort by any column; set a minimum number of games to hide small samples.</p>
+      <div class="toolbar"><div class="f"><label for="stMin">Min games</label><select id="stMin"><option>1</option><option selected>5</option><option>10</option><option>20</option></select></div>
+        <div class="f"><label for="stSearch">Search</label><input id="stSearch" placeholder="Stadium name…"></div></div>
+      <div class="tbl-wrap" id="stadiumTable"></div></div>
+  </section>
+
+  <!-- MARGINS -->
+  <section class="page" id="p-margins">
+    <div class="intro"><h2><span class="qtag">Q3</span><span class="qtag">Q6</span>Margin of victory</h2>
+      <p>Are divisional, playoff and prime-time games closer? How does the average margin change as the season goes on?</p></div>
+    <div class="grid g2">
+      <div class="card"><h3>Average margin by game type</h3>
+        <p class="sub">Average points between winner and loser. Hover for one-score % and sample size.</p>
+        <div class="chart"><canvas id="cCtx"></canvas></div></div>
+      <div class="card"><h3>Close games by game type</h3>
+        <p class="sub">Share of games decided by 7 points or fewer (one score)</p>
+        <div class="chart"><canvas id="cClose"></canvas></div></div>
+    </div>
+    <div class="card" style="margin-top:14px"><h3>Average margin as the season progresses</h3>
+      <p class="sub">Blue = regular-season weeks 1–18, orange = playoff rounds. Dashed line = regular-season average.</p>
+      <div class="kpis" id="phaseKpis" style="margin-bottom:10px"></div>
+      <div class="chart"><canvas id="cWeek"></canvas></div></div>
+  </section>
+
+  <!-- LOG -->
+  <section class="page" id="p-log">
+    <div class="intro"><h2>Game log</h2><p>Every game in the current filters. Search by team or stadium, narrow by betting outcome, and download the result as CSV.</p></div>
+    <div class="card">
+      <div class="toolbar">
+        <div class="f"><label for="lgSearch">Search</label><input id="lgSearch" placeholder="e.g. KC, Lambeau…"></div>
+        <div class="f"><label for="lgAts">Spread result</label><select id="lgAts"><option value="">Any</option><option value="fav">Favorite covered</option><option value="dog">Underdog covered</option><option value="push">Push</option><option value="home">Home covered</option><option value="away">Away covered</option></select></div>
+        <div class="f"><label for="lgOu">Over / under</label><select id="lgOu"><option value="">Any</option><option>Over</option><option>Under</option><option>Push</option></select></div>
+        <div class="f"><label for="lgVenue">Venue</label><select id="lgVenue"><option value="">Any</option><option value="in">Indoor</option><option value="out">Outdoor</option></select></div>
+        <div class="f"><label for="lgCtx">Game type</label><select id="lgCtx"><option value="">Any</option><option value="div">Divisional</option><option value="nondiv">Non-divisional</option><option value="prime">Prime time</option><option value="post">Playoffs</option></select></div>
+        <button class="btn" id="lgCsv" style="align-self:flex-end">Download CSV</button>
+      </div>
+      <div class="tbl-wrap" id="logTable"></div>
+    </div>
+  </section>
+  <p class="note" id="footer"></p>
+</div>
+
+<script>
+const RAW = /*__DATA__*/null;
+
+/* ---------- Data prep ---------- */
+const DIV_OF = {};
+for (const [d, ts] of Object.entries(RAW.divisions)) ts.forEach(t => DIV_OF[t] = d);
+const ROUND = { WC: 'Wild Card', DIV: 'Divisional', CON: 'Conference', SB: 'Super Bowl' };
+const ROUND_S = { WC: 'WC', DIV: 'DIV', CON: 'CONF', SB: 'SB' };
+const GAMES = RAW.games.map(r => {
+  const g = {}; RAW.columns.forEach((c, i) => g[c] = r[i]);
+  g.result = g.hs - g.as;                 // home margin
+  g.pts = g.hs + g.as;
+  g.margin = Math.abs(g.result);
+  g.post = g.type !== 'REG';
+  g.indoor = g.roof === 'dome' || g.roof === 'closed';
+  g.prime = !!g.kick && g.kick >= '19:00';
+  g.favTeam = g.fav === 1 ? g.home : g.fav === -1 ? g.away : null;
+  g.dogTeam = g.fav === 1 ? g.away : g.fav === -1 ? g.home : null;
+  // ATS: spread = points the HOME team is expected to win by (+ = home favored)
+  g.homeAtsM = g.spread == null ? null : g.result - g.spread;
+  g.favAtsM = (g.spread == null || !g.fav) ? null : (g.fav === 1 ? g.result : -g.result) - Math.abs(g.spread);
+  g.favWon = g.fav ? Math.sign(g.fav === 1 ? g.result : -g.result) : null;
+  g.ouM = g.total == null ? null : g.pts - g.total;
+  g.ou = g.ouM == null ? '' : g.ouM > 0 ? 'Over' : g.ouM < 0 ? 'Under' : 'Push';
+  g.atsWinner = g.homeAtsM == null ? '' : g.homeAtsM > 0 ? g.home : g.homeAtsM < 0 ? g.away : 'PUSH';
+  return g;
+});
+const SEASONS = [...new Set(GAMES.map(g => g.season))].sort((a, b) => a - b);
+const TEAMS = Object.keys(DIV_OF).sort();
+
+/* ---------- Helpers ---------- */
+const $ = s => document.querySelector(s);
+const pct = (x, d = 1) => x == null || isNaN(x) ? '–' : (x * 100).toFixed(d) + '%';
+const num = (x, d = 1) => x == null || isNaN(x) ? '–' : x.toFixed(d);
+const mean = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : NaN;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+/** Grade a list of signed margins: >0 win, 0 push, <0 loss. pct excludes pushes. */
+function grade(ms) {
+  let w = 0, l = 0, p = 0;
+  for (const m of ms) { if (m == null) continue; if (m > 0) w++; else if (m < 0) l++; else p++; }
+  return { w, l, p, n: w + l + p, pct: w + l ? w / (w + l) : NaN, rec: `${w}-${l}-${p}` };
+}
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---------- Filters ---------- */
+const F = { from: SEASONS[0], to: SEASONS[SEASONS.length - 1], type: 'all', div: '', team: '' };
+function initFilters() {
+  const opt = (v, t, sel) => `<option value="${v}"${sel ? ' selected' : ''}>${t}</option>`;
+  $('#fFrom').innerHTML = SEASONS.map(s => opt(s, s, s === F.from)).join('');
+  $('#fTo').innerHTML = SEASONS.map(s => opt(s, s, s === F.to)).join('');
+  $('#fDiv').innerHTML = opt('', 'All divisions') + Object.keys(RAW.divisions).map(d => opt(d, d)).join('');
+  fillTeams();
+  const on = (id, k, cast = v => v) => $(id).addEventListener('change', e => { F[k] = cast(e.target.value); onFilter(id); });
+  on('#fFrom', 'from', Number); on('#fTo', 'to', Number); on('#fType', 'type'); on('#fDiv', 'div'); on('#fTeam', 'team');
+  $('#resetBtn').onclick = () => {
+    Object.assign(F, { from: SEASONS[0], to: SEASONS[SEASONS.length - 1], type: 'all', div: '', team: '' });
+    $('#fFrom').value = F.from; $('#fTo').value = F.to; $('#fType').value = 'all'; $('#fDiv').value = ''; fillTeams(); render();
+  };
+}
+function fillTeams() {
+  const list = F.div ? RAW.divisions[F.div] : TEAMS;
+  if (F.team && !list.includes(F.team)) F.team = '';
+  $('#fTeam').innerHTML = `<option value="">All teams</option>` + list.map(t => `<option value="${t}"${t === F.team ? ' selected' : ''}>${t} – ${RAW.teamNames[t]}</option>`).join('');
+}
+function onFilter(id) {
+  if (F.from > F.to) { if (id === '#fFrom') F.to = F.from; else F.from = F.to; $('#fFrom').value = F.from; $('#fTo').value = F.to; }
+  if (id === '#fDiv') fillTeams();
+  render();
+}
+/** Season + game-type filter only (no team/division). */
+function baseGames() {
+  return GAMES.filter(g => g.season >= F.from && g.season <= F.to &&
+    (F.type === 'all' || (F.type === 'REG' ? !g.post : g.post)));
+}
+/** Full filter: also keeps only games involving the team / division. */
+function games() {
+  return baseGames().filter(g => {
+    if (F.team) return g.home === F.team || g.away === F.team;
+    if (F.div) return DIV_OF[g.home] === F.div || DIV_OF[g.away] === F.div;
+    return true;
+  });
+}
+
+/* ---------- Charts ---------- */
+const charts = {};
+const refLine = {
+  id: 'refLine',
+  afterDatasetsDraw(chart, _a, o) {
+    if (o == null || o.value == null) return;
+    const horiz = chart.options.indexAxis === 'y';
+    const scale = horiz ? chart.scales.x : chart.scales.y;
+    const px = scale.getPixelForValue(o.value), ca = chart.chartArea, ctx = chart.ctx;
+    ctx.save(); ctx.strokeStyle = cssVar('--muted'); ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+    ctx.beginPath();
+    if (horiz) { ctx.moveTo(px, ca.top); ctx.lineTo(px, ca.bottom); } else { ctx.moveTo(ca.left, px); ctx.lineTo(ca.right, px); }
+    ctx.stroke(); ctx.restore();
+  }
+};
+const barLabels = {
+  id: 'barLabels',
+  afterDatasetsDraw(chart, _a, o) {
+    if (!o || !o.fmt) return;
+    const ctx = chart.ctx, horiz = chart.options.indexAxis === 'y';
+    ctx.save(); ctx.fillStyle = cssVar('--text-2'); ctx.font = '600 11px Inter, sans-serif';
+    chart.data.datasets.forEach((ds, di) => {
+      const meta = chart.getDatasetMeta(di); if (meta.hidden) return;
+      meta.data.forEach((el, i) => {
+        const v = ds.data[i]; if (v == null || isNaN(v)) return;
+        const t = o.fmt(v);
+        if (horiz) { ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(t, el.x + 5, el.y); }
+        else { ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText(t, el.x, Math.min(el.y, el.base) - 4); }
+      });
+    });
+    ctx.restore();
+  }
+};
+Chart.register(refLine, barLabels);
+
+function baseOpts({ yPct = false, xPct = false, horiz = false, yMin, yMax, tooltip } = {}) {
+  const grid = cssVar('--grid'), tick = cssVar('--text-2');
+  const pctTick = v => Math.round(v * 100) + '%';
+  const o = {
+    responsive: true, maintainAspectRatio: false, animation: false,
+    indexAxis: horiz ? 'y' : 'x',
+    interaction: { mode: 'index', intersect: false },
+    layout: { padding: { top: 18, right: horiz ? 46 : 8 } },
+    plugins: {
+      legend: { display: false },
+      tooltip: Object.assign({
+        backgroundColor: cssVar('--surface'), titleColor: cssVar('--text'), bodyColor: cssVar('--text-2'),
+        borderColor: cssVar('--border'), borderWidth: 1, padding: 10, boxPadding: 4, usePointStyle: true,
+        titleFont: { weight: '600' },
+      }, tooltip || {}),
+    },
+    scales: {
+      x: { grid: { display: horiz, color: grid }, border: { display: false }, ticks: { color: tick, maxRotation: 0 } },
+      y: { grid: { display: !horiz, color: grid }, border: { display: false }, ticks: { color: tick, autoSkip: !horiz } },
+    },
+  };
+  const v = horiz ? o.scales.x : o.scales.y;           // value axis
+  if (yMin != null) v.min = yMin;
+  if (yMax != null) v.max = yMax;
+  if (yPct || xPct) v.ticks.callback = pctTick;
+  return o;
+}
+function draw(id, config) {
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(document.getElementById(id), config);
+}
+const BAR = { borderRadius: 4, borderSkipped: 'start', maxBarThickness: 46, categoryPercentage: .72, barPercentage: .9, borderColor: 'transparent' };
+
+/* ---------- Pages ---------- */
+let tab = 'overview';
+function render() {
+  const g = games();
+  const seasons = F.from === F.to ? `${F.from}` : `${F.from}–${F.to}`;
+  const type = { all: 'regular season + playoffs', REG: 'regular season', POST: 'playoffs' }[F.type];
+  const who = F.team ? ` · games involving <b>${F.team}</b>` : F.div ? ` · games involving the <b>${F.div}</b>` : '';
+  const partial = F.to === SEASONS[SEASONS.length - 1] ? ` · ${F.to} season is in progress (through ${RAW.meta.lastGame})` : '';
+  $('#summary').innerHTML = `Showing <b>${g.length.toLocaleString()}</b> completed games · ${seasons} · ${type}${who}${partial}`;
+  ({ overview: renderOverview, teams: renderTeams, lines: renderLines, scoring: renderScoring, margins: renderMargins, log: renderLog })[tab](g);
+}
+
+function kpi(label, value, sub) { return `<div class="kpi"><div class="l">${label}</div><div class="v">${value}</div><div class="s">${sub || ''}</div></div>`; }
+
+/* Overview */
+function renderOverview(g) {
+  if (!g.length) { $('#ovKpis').innerHTML = ''; $('#ovAnswers').innerHTML = '<div class="empty">No games match these filters.</div>'; return; }
+  const fav = grade(g.map(x => x.favAtsM));
+  const home = grade(g.filter(x => !x.neutral).map(x => x.homeAtsM));
+  const ou = grade(g.map(x => x.ouM));
+  $('#ovKpis').innerHTML = [
+    kpi('Games', g.length.toLocaleString(), `${new Set(g.map(x => x.season)).size} season(s)`),
+    kpi('Points per game', num(mean(g.map(x => x.pts))), `Avg closing total ${num(mean(g.filter(x => x.total != null).map(x => x.total)))}`),
+    kpi('Favorite cover %', pct(fav.pct), `${fav.rec} (W-L-Push)`),
+    kpi('Home cover %', pct(home.pct), `${home.rec} · neutral sites excluded`),
+    kpi('Over %', pct(ou.pct), `${ou.rec} (O-U-Push)`),
+    kpi('Avg margin of victory', num(mean(g.map(x => x.margin))) + ' pts', `${pct(g.filter(x => x.margin <= 7).length / g.length, 0)} decided by ≤ 7`),
+  ].join('');
+
+  const A = [];
+  // Q1
+  const tr = teamRows(F.team || F.div ? scopeTeamsGames() : baseGames(), 'all', 10);
+  const trF = teamRows(F.team || F.div ? scopeTeamsGames() : baseGames(), 'fav', 5), trD = teamRows(F.team || F.div ? scopeTeamsGames() : baseGames(), 'dog', 5);
+  if (tr.length) {
+    const top = tr[0], tf = trF[0], td = trD[0];
+    A.push(['Which teams cover the spread most often?', `<b>${top.team}</b> leads at <b>${pct(top.pct)}</b> (${top.rec}).` +
+      (tf ? ` As a favorite: <b>${tf.team}</b> ${pct(tf.pct)}.` : '') + (td ? ` As an underdog: <b>${td.team}</b> ${pct(td.pct)}.` : ''), 'teams']);
+  }
+  // Q2
+  const ind = g.filter(x => x.roof && x.indoor), out = g.filter(x => x.roof && !x.indoor);
+  if (ind.length && out.length) {
+    const io = grade(ind.map(x => x.ouM)), oo = grade(out.map(x => x.ouM));
+    const d = mean(ind.map(x => x.pts)) - mean(out.map(x => x.pts));
+    A.push(['How does indoor vs. outdoor affect total points?', `Indoor games average <b>${num(mean(ind.map(x => x.pts)))}</b> pts vs. <b>${num(mean(out.map(x => x.pts)))}</b> outdoors (${d >= 0 ? '+' : ''}${num(d)}). Over % is <b>${pct(io.pct)}</b> indoors vs. <b>${pct(oo.pct)}</b> outdoors.`, 'scoring']);
+  }
+  // Q3
+  const dv = g.filter(x => x.div), nd = g.filter(x => !x.div), po = g.filter(x => x.post), pr = g.filter(x => x.prime);
+  A.push(['How do divisional games affect margin of victory?', `Divisional games are decided by <b>${num(mean(dv.map(x => x.margin)))}</b> pts on average vs. <b>${num(mean(nd.map(x => x.margin)))}</b> in non-divisional games.` +
+    (pr.length ? ` Prime time: <b>${num(mean(pr.map(x => x.margin)))}</b>.` : '') + (po.length ? ` Playoffs: <b>${num(mean(po.map(x => x.margin)))}</b>.` : ''), 'margins']);
+  // Q4
+  const bySeason = SEASONS.filter(s => s >= F.from && s <= F.to).map(s => ({ s, v: mean(g.filter(x => x.season === s).map(x => x.pts)) })).filter(x => !isNaN(x.v));
+  if (bySeason.length > 1) {
+    const hi = bySeason.reduce((a, b) => b.v > a.v ? b : a), lo = bySeason.reduce((a, b) => b.v < a.v ? b : a);
+    const f = bySeason[0], l = bySeason[bySeason.length - 1];
+    A.push(['Is the league scoring more or less over time?', `<b>${f.s}</b>: ${num(f.v)} pts/game → <b>${l.s}</b>: ${num(l.v)} (${l.v >= f.v ? 'up' : 'down'} ${num(Math.abs(l.v - f.v))}). Highest: ${hi.s} (${num(hi.v)}); lowest: ${lo.s} (${num(lo.v)}).`, 'scoring']);
+  }
+  // Q5
+  const small = grade(g.filter(x => x.fav && Math.abs(x.spread) <= 3).map(x => x.favAtsM));
+  const big = grade(g.filter(x => x.fav && Math.abs(x.spread) >= 7).map(x => x.favAtsM));
+  A.push(['How does a favorite’s cover chance change as the spread grows?', `Favorites of 3 or fewer points cover <b>${pct(small.pct)}</b> (n=${small.n}); favorites of 7+ points cover <b>${pct(big.pct)}</b> (n=${big.n}).`, 'lines']);
+  // Q6
+  const reg = g.filter(x => !x.post);
+  const e = reg.filter(x => x.week <= 6), lt = reg.filter(x => x.week >= 13);
+  if (e.length && lt.length) A.push(['How does margin of victory change as the season progresses?', `Weeks 1–6: <b>${num(mean(e.map(x => x.margin)))}</b> pts on average. Weeks 13–18: <b>${num(mean(lt.map(x => x.margin)))}</b> pts.` + (po.length ? ` Playoffs: <b>${num(mean(po.map(x => x.margin)))}</b>.` : ''), 'margins']);
+  // Q7
+  const hm = mean(g.filter(x => !x.neutral).map(x => x.result));
+  A.push(['Do home teams or favorites cover more often?', `${home.pct > fav.pct ? '<b>Home teams</b>' : '<b>Favorites</b>'} cover more: home <b>${pct(home.pct)}</b> vs. favorites <b>${pct(fav.pct)}</b>. Home-field advantage: home teams win by <b>${num(hm)}</b> pts on average.`, 'lines']);
+
+  $('#ovAnswers').innerHTML = A.map((a, i) => `<div class="answer"><div class="q"><span class="num">${i + 1}</span>${a[0]}</div><div class="a">${a[1]}</div><button data-go="${a[2]}">See the charts →</button></div>`).join('');
+  document.querySelectorAll('#ovAnswers [data-go]').forEach(b => b.onclick = () => setTab(b.dataset.go));
+}
+
+/* Team ATS */
+let teamRole = 'all';
+/** Games used for team tables: season/type filter, all opponents. */
+function scopeTeamsGames() { return baseGames(); }
+function teamRows(gs, role, minN = 0) {
+  const teams = F.div ? RAW.divisions[F.div] : TEAMS;
+  const rows = teams.map(t => {
+    const mine = gs.filter(x => x.home === t || x.away === t);
+    const tm = x => x.homeAtsM == null ? null : (x.home === t ? x.homeAtsM : -x.homeAtsM);
+    const pick = role === 'fav' ? mine.filter(x => x.favTeam === t) : role === 'dog' ? mine.filter(x => x.dogTeam === t) : mine;
+    const gr = grade(pick.map(tm));
+    const fv = grade(mine.filter(x => x.favTeam === t).map(tm)), dg = grade(mine.filter(x => x.dogTeam === t).map(tm));
+    return { team: t, div: DIV_OF[t], ...gr, fav: fv, dog: dg, atsM: mean(pick.map(tm).filter(v => v != null)) };
+  }).filter(r => r.n >= minN && !isNaN(r.pct));
+  return rows.sort((a, b) => b.pct - a.pct || b.n - a.n);
+}
+function renderTeams() {
+  const rows = teamRows(scopeTeamsGames(), teamRole);
+  const zoom = rows.length && rows.every(r => r.pct >= .3 && r.pct <= .7);
+  const roleTxt = { all: 'all games', fav: 'as the favorite', dog: 'as the underdog' }[teamRole];
+  $('#teamChartTitle').textContent = `ATS cover % by team, ${roleTxt}`;
+  $('#teamChartSub').textContent = `${F.from === F.to ? F.from : F.from + '–' + F.to}${F.div ? ' · ' + F.div : ''} · sorted high to low · axis ${zoom ? '30–70%' : '0–100%'}${F.team ? ' · ' + F.team + ' highlighted' : ''}`;
+  const s1 = cssVar('--s1'), s2 = cssVar('--s2'), nu = cssVar('--neutral');
+  $('#cTeams').parentElement.style.height = Math.max(220, rows.length * 19 + 50) + 'px';
+  const o = baseOpts({ horiz: true, xPct: true, yMin: zoom ? .3 : 0, yMax: zoom ? .7 : 1 });
+  o.interaction = { mode: 'nearest', axis: 'y', intersect: false };
+  o.plugins.refLine = { value: .5 }; o.plugins.barLabels = { fmt: v => pct(v, 0) };
+  o.plugins.tooltip.callbacks = {
+    title: i => `${rows[i[0].dataIndex].team} – ${RAW.teamNames[rows[i[0].dataIndex].team]}`,
+    label: i => { const r = rows[i.dataIndex]; return [`Cover %: ${pct(r.pct)}`, `Record (W-L-P): ${r.rec}`, `Avg ATS margin: ${r.atsM >= 0 ? '+' : ''}${num(r.atsM)} pts`]; } };
+  draw('cTeams', { type: 'bar', data: { labels: rows.map(r => r.team), datasets: [{ data: rows.map(r => r.pct), ...BAR, maxBarThickness: 22, categoryPercentage: .86,
+    backgroundColor: rows.map(r => r.team === F.team ? s2 : r.pct > .5 ? s1 : nu) }] }, options: o });
+  table('#teamTable', [
+    { k: 'team', h: 'Team', f: r => `<b title="${RAW.teamNames[r.team]}">${r.team}</b>` },
+    { k: 'div', h: 'Division' },
+    { k: 'pct', h: 'Cover %', num: 1, f: r => pct(r.pct) },
+    { k: 'rec', h: 'W-L-P', num: 1, sort: r => r.n },
+    { k: 'favpct', h: 'As fav', num: 1, sort: r => r.fav.pct, f: r => `${pct(r.fav.pct)} <span style="color:var(--muted)">(${r.fav.rec})</span>` },
+    { k: 'dogpct', h: 'As dog', num: 1, sort: r => r.dog.pct, f: r => `${pct(r.dog.pct)} <span style="color:var(--muted)">(${r.dog.rec})</span>` },
+    { k: 'atsM', h: 'Avg ATS margin', num: 1, f: r => (r.atsM >= 0 ? '+' : '') + num(r.atsM) },
+  ], rows, { key: 'pct', desc: true, hl: r => r.team === F.team });
+}
+
+/* Favorites & home field */
+const BUCKETS = [['Pick–2.5', 0, 2.5], ['3', 3, 3], ['3.5–6.5', 3.5, 6.5], ['7', 7, 7], ['7.5–9.5', 7.5, 9.5], ['10–13.5', 10, 13.5], ['14+', 14, 99]];
+function renderLines(g) {
+  const nn = g.filter(x => !x.neutral);
+  const hw = nn.filter(x => x.result > 0).length / nn.length;
+  const home = grade(nn.map(x => x.homeAtsM)), fav = grade(g.map(x => x.favAtsM));
+  $('#hfKpis').innerHTML = [
+    kpi('Home win %', pct(hw), `${nn.length.toLocaleString()} non-neutral games`),
+    kpi('Home-field advantage', (mean(nn.map(x => x.result)) >= 0 ? '+' : '') + num(mean(nn.map(x => x.result))) + ' pts', 'Avg home margin'),
+    kpi('Home cover %', pct(home.pct), home.rec),
+    kpi('Favorite cover %', pct(fav.pct), fav.rec),
+    kpi('Favorite win %', pct(g.filter(x => x.favWon === 1).length / g.filter(x => x.fav).length), 'Straight up'),
+  ].join('');
+
+  const s1 = cssVar('--s1'), s2 = cssVar('--s2'), s3 = cssVar('--s3'), nu = cssVar('--neutral');
+  const bk = BUCKETS.map(([l, lo, hi]) => {
+    const gs = g.filter(x => x.fav && Math.abs(x.spread) >= lo && Math.abs(x.spread) <= hi);
+    const gr = grade(gs.map(x => x.favAtsM));
+    return { l, n: gs.length, gr, win: gs.length ? gs.filter(x => x.favWon === 1).length / gs.length : NaN };
+  });
+  const o = baseOpts({ yPct: true, yMin: 0, yMax: 1 });
+  o.plugins.refLine = { value: .5 }; o.plugins.barLabels = { fmt: v => pct(v, 0) };
+  o.plugins.tooltip.callbacks = { title: i => `Favorite by ${bk[i[0].dataIndex].l} pts`,
+    label: i => i.datasetIndex === 0 ? `Cover %: ${pct(bk[i.dataIndex].gr.pct)} (${bk[i.dataIndex].gr.rec})` : `Win %: ${pct(bk[i.dataIndex].win)}`,
+    footer: i => `n = ${bk[i[0].dataIndex].n} games` };
+  draw('cSpread', { type: 'bar', data: { labels: bk.map(b => [b.l, `n=${b.n}`]), datasets: [
+    { label: 'Cover %', data: bk.map(b => b.gr.pct), backgroundColor: s1, ...BAR },
+    { label: 'Win %', data: bk.map(b => b.win), backgroundColor: s2, ...BAR }] }, options: o });
+
+  const roles = [
+    ['Home teams', nn.map(x => x.homeAtsM)], ['Away teams', nn.map(x => x.homeAtsM == null ? null : -x.homeAtsM)],
+    ['Favorites', g.map(x => x.favAtsM)], ['Underdogs', g.map(x => x.favAtsM == null ? null : -x.favAtsM)],
+    ['Home favorites', nn.filter(x => x.fav === 1).map(x => x.favAtsM)], ['Home underdogs', nn.filter(x => x.fav === -1).map(x => -x.favAtsM)],
+    ['Road favorites', nn.filter(x => x.fav === -1).map(x => x.favAtsM)], ['Road underdogs', nn.filter(x => x.fav === 1).map(x => -x.favAtsM)],
+  ].map(([name, ms]) => ({ name, ...grade(ms) }));
+  const o2 = baseOpts({ horiz: true, xPct: true, yMin: .3, yMax: .7 });
+  o2.plugins.refLine = { value: .5 }; o2.plugins.barLabels = { fmt: v => pct(v) };
+  o2.interaction = { mode: 'nearest', axis: 'y', intersect: false };
+  o2.plugins.tooltip.callbacks = { label: i => [`Cover %: ${pct(roles[i.dataIndex].pct)}`, `Record (W-L-P): ${roles[i.dataIndex].rec}`] };
+  o2.scales.x.ticks.stepSize = .05;
+  draw('cWho', { type: 'bar', data: { labels: roles.map(r => r.name), datasets: [{ data: roles.map(r => r.pct),
+    backgroundColor: roles.map(r => r.pct > .5 ? s1 : nu), ...BAR, borderSkipped: false, maxBarThickness: 24 }] }, options: o2 });
+
+  const ss = SEASONS.filter(s => s >= F.from && s <= F.to).map(s => {
+    const gs = nn.filter(x => x.season === s);
+    return { s, m: mean(gs.map(x => x.result)), a: grade(gs.map(x => x.homeAtsM)), n: gs.length };
+  }).filter(r => r.n);
+  const o3 = baseOpts(); o3.plugins.barLabels = { fmt: v => (v >= 0 ? '+' : '') + num(v) };
+  o3.plugins.tooltip.callbacks = { label: i => `Avg home margin: ${num(ss[i.dataIndex].m)} pts`, footer: i => `n = ${ss[i[0].dataIndex].n} games` };
+  draw('cHfaPts', { type: 'bar', data: { labels: ss.map(r => r.s), datasets: [{ data: ss.map(r => r.m), backgroundColor: s1, ...BAR }] }, options: o3 });
+  const o4 = baseOpts({ yPct: true, yMin: 0, yMax: .8 }); o4.plugins.refLine = { value: .5 }; o4.plugins.barLabels = { fmt: v => pct(v, 0) };
+  o4.plugins.tooltip.callbacks = { label: i => `Home cover %: ${pct(ss[i.dataIndex].a.pct)} (${ss[i.dataIndex].a.rec})` };
+  draw('cHfaAts', { type: 'bar', data: { labels: ss.map(r => r.s), datasets: [{ data: ss.map(r => r.a.pct), backgroundColor: s3, ...BAR }] }, options: o4 });
+}
+
+/* Scoring & stadiums */
+const ROOF = { dome: 'Dome', closed: 'Retractable (closed)', open: 'Retractable (open)', outdoors: 'Outdoors' };
+function renderScoring(g) {
+  const s1 = cssVar('--s1'), s2 = cssVar('--s2');
+  const ss = SEASONS.filter(s => s >= F.from && s <= F.to).map(s => {
+    const gs = g.filter(x => x.season === s);
+    return { s, v: mean(gs.map(x => x.pts)), line: mean(gs.filter(x => x.total != null).map(x => x.total)), ou: grade(gs.map(x => x.ouM)), n: gs.length };
+  }).filter(r => r.n);
+  const o = baseOpts();
+  o.plugins.tooltip.callbacks = { label: i => `${i.dataset.label}: ${num(i.raw)}`, footer: i => { const r = ss[i[0].dataIndex]; return `Over %: ${pct(r.ou.pct)} (${r.ou.rec}) · n = ${r.n}`; } };
+  draw('cTrend', { type: 'line', data: { labels: ss.map(r => r.s), datasets: [
+    { label: 'Actual combined points', data: ss.map(r => r.v), borderColor: s1, backgroundColor: s1, borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, tension: .25 },
+    { label: 'Avg closing total', data: ss.map(r => r.line), borderColor: s2, backgroundColor: s2, borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, tension: .25, borderDash: [5, 4] }] }, options: o });
+  $('#trendNote').textContent = ss.length > 1 ? `When the blue line is above orange, games went over the market's expectation on average.` : 'Select more than one season to see a trend.';
+
+  const side = (label, gs, color) => {
+    const ou = grade(gs.map(x => x.ouM));
+    return `<div class="side"><h4><i style="width:10px;height:10px;border-radius:3px;background:${color};display:inline-block"></i>${label}</h4>
+      <div class="row"><span>Games</span><b>${gs.length.toLocaleString()}</b></div>
+      <div class="row"><span>Avg combined pts</span><b>${num(mean(gs.map(x => x.pts)))}</b></div>
+      <div class="row"><span>Avg closing total</span><b>${num(mean(gs.filter(x => x.total != null).map(x => x.total)))}</b></div>
+      <div class="row"><span>Over %</span><b>${pct(ou.pct)}</b></div>
+      <div class="row"><span>O-U-Push</span><b>${ou.rec}</b></div></div>`;
+  };
+  $('#vsTiles').innerHTML = side('Indoor', g.filter(x => x.roof && x.indoor), s1) + side('Outdoor', g.filter(x => x.roof && !x.indoor), s2);
+  const rf = Object.keys(ROOF).map(k => { const gs = g.filter(x => x.roof === k); return { l: ROOF[k], n: gs.length, v: mean(gs.map(x => x.pts)), line: mean(gs.filter(x => x.total != null).map(x => x.total)), ou: grade(gs.map(x => x.ouM)) }; }).filter(r => r.n);
+  const o2 = baseOpts({ horiz: true, yMin: 30 }); o2.plugins.barLabels = { fmt: v => num(v) };
+  o2.interaction = { mode: 'index', axis: 'y', intersect: false };
+  o2.plugins.tooltip.callbacks = { label: i => `${i.dataset.label}: ${num(i.raw)}`, footer: i => { const r = rf[i[0].dataIndex]; return `Over %: ${pct(r.ou.pct)} (${r.ou.rec}) · n = ${r.n}`; } };
+  draw('cRoof', { type: 'bar', data: { labels: rf.map(r => r.l), datasets: [
+    { label: 'Avg combined points', data: rf.map(r => r.v), backgroundColor: s1, ...BAR, borderSkipped: 'start', maxBarThickness: 16 },
+    { label: 'Avg closing total', data: rf.map(r => r.line), backgroundColor: s2, ...BAR, borderSkipped: 'start', maxBarThickness: 16 }] }, options: o2 });
+  renderStadiums(g);
+}
+function renderStadiums(g) {
+  const min = +$('#stMin').value, q = $('#stSearch').value.trim().toLowerCase();
+  const by = {};
+  g.forEach(x => { if (!x.stadium) return; (by[x.stadium] ||= []).push(x); });
+  const rows = Object.entries(by).map(([s, gs]) => {
+    const ou = grade(gs.map(x => x.ouM));
+    const rc = {}; gs.forEach(x => rc[x.roof] = (rc[x.roof] || 0) + 1);
+    const roof = Object.entries(rc).sort((a, b) => b[1] - a[1])[0][0];
+    const homes = {}; gs.filter(x => !x.neutral).forEach(x => homes[x.home] = (homes[x.home] || 0) + 1);
+    const team = Object.entries(homes).sort((a, b) => b[1] - a[1]).map(e => e[0]).slice(0, 2).join(' / ') || 'Neutral';
+    return { stadium: s, team, roof: ROOF[roof] || roof || '–', indoor: roof === 'dome' || roof === 'closed', n: gs.length, pts: mean(gs.map(x => x.pts)), line: mean(gs.filter(x => x.total != null).map(x => x.total)), ou };
+  }).filter(r => r.n >= min && (!q || r.stadium.toLowerCase().includes(q) || r.team.toLowerCase().includes(q)));
+  table('#stadiumTable', [
+    { k: 'stadium', h: 'Stadium', f: r => `<b>${esc(r.stadium)}</b>` },
+    { k: 'team', h: 'Home team' },
+    { k: 'roof', h: 'Roof', f: r => `<span class="pill ${r.indoor ? '' : 'mute'}">${r.roof}</span>` },
+    { k: 'n', h: 'Games', num: 1 },
+    { k: 'pts', h: 'Avg pts', num: 1, f: r => num(r.pts) },
+    { k: 'line', h: 'Avg total line', num: 1, f: r => num(r.line) },
+    { k: 'diff', h: 'Pts vs line', num: 1, sort: r => r.pts - r.line, f: r => { const d = r.pts - r.line; return `<span style="color:${d >= 0 ? 'var(--good)' : 'var(--bad)'}">${d >= 0 ? '+' : ''}${num(d)}</span>`; } },
+    { k: 'ourec', h: 'O-U-P', num: 1, sort: r => r.ou.n, f: r => r.ou.rec },
+    { k: 'oupct', h: 'Over %', num: 1, sort: r => r.ou.pct, f: r => pct(r.ou.pct) },
+  ], rows, { key: 'pts', desc: true, page: 15 });
+}
+
+/* Margins */
+function renderMargins(g) {
+  const s1 = cssVar('--s1'), s2 = cssVar('--s2'), s3 = cssVar('--s3'), nu = cssVar('--neutral');
+  const ctx = [
+    ['All games', g, nu], ['Divisional', g.filter(x => x.div), s1], ['Non-div.', g.filter(x => !x.div), s1],
+    ['Prime time', g.filter(x => x.prime), s3], ['Day games', g.filter(x => !x.prime), s3],
+    ['Regular', g.filter(x => !x.post), s2], ['Playoffs', g.filter(x => x.post), s2],
+  ].map(([l, gs, c]) => ({ l, c, n: gs.length, m: mean(gs.map(x => x.margin)), close: gs.length ? gs.filter(x => x.margin <= 7).length / gs.length : NaN, blow: gs.length ? gs.filter(x => x.margin >= 17).length / gs.length : NaN })).filter(r => r.n);
+  const o = baseOpts({ yMin: 0 }); o.plugins.barLabels = { fmt: v => num(v) };
+  o.plugins.tooltip.callbacks = { label: i => { const r = ctx[i.dataIndex]; return [`Avg margin: ${num(r.m)} pts`, `One-score games (≤7): ${pct(r.close)}`, `Blowouts (≥17): ${pct(r.blow)}`]; }, footer: i => `n = ${ctx[i[0].dataIndex].n} games` };
+  draw('cCtx', { type: 'bar', data: { labels: ctx.map(r => [r.l, `n=${r.n}`]), datasets: [{ data: ctx.map(r => r.m), backgroundColor: ctx.map(r => r.c), ...BAR }] }, options: o });
+  const o2 = baseOpts({ yPct: true, yMin: 0, yMax: 1 }); o2.plugins.barLabels = { fmt: v => pct(v, 0) };
+  o2.plugins.tooltip.callbacks = { label: i => `Decided by ≤ 7: ${pct(ctx[i.dataIndex].close)}`, footer: i => `n = ${ctx[i[0].dataIndex].n} games` };
+  draw('cClose', { type: 'bar', data: { labels: ctx.map(r => [r.l, `n=${r.n}`]), datasets: [{ data: ctx.map(r => r.close), backgroundColor: ctx.map(r => r.c), ...BAR }] }, options: o2 });
+
+  const reg = g.filter(x => !x.post), po = g.filter(x => x.post);
+  const ph = [['Early season', 'Weeks 1–6', reg.filter(x => x.week <= 6)], ['Mid season', 'Weeks 7–12', reg.filter(x => x.week >= 7 && x.week <= 12)], ['Late season', 'Weeks 13–18', reg.filter(x => x.week >= 13)], ['Playoffs', 'All rounds', po]];
+  $('#phaseKpis').innerHTML = ph.map(([l, s, gs]) => kpi(l, gs.length ? num(mean(gs.map(x => x.margin))) + ' pts' : '–', `${s} · n=${gs.length}`)).join('');
+  const pts = [];
+  for (let w = 1; w <= 18; w++) { const gs = reg.filter(x => x.week === w); if (gs.length) pts.push({ l: `${w}`, gs }); }
+  ['WC', 'DIV', 'CON', 'SB'].forEach(t => { const gs = po.filter(x => x.type === t); if (gs.length) pts.push({ l: ROUND_S[t], full: ROUND[t], gs, post: true }); });
+  const wk = pts.map(p => ({ ...p, m: mean(p.gs.map(x => x.margin)), close: p.gs.filter(x => x.margin <= 7).length / p.gs.length, n: p.gs.length }));
+  const allAvg = mean(reg.map(x => x.margin));
+  const o3 = baseOpts({ yMin: 0 }); o3.plugins.refLine = { value: allAvg };
+  o3.scales.x.title = { display: true, text: 'Regular-season week, then playoff round', color: cssVar('--muted') };
+  o3.plugins.tooltip.callbacks = { title: i => { const p = wk[i[0].dataIndex]; return p.post ? p.full + ' round' : 'Week ' + p.l; }, label: i => `Avg margin: ${num(wk[i.dataIndex].m)} pts`, afterLabel: i => `One-score games: ${pct(wk[i.dataIndex].close)}`, footer: i => `n = ${wk[i[0].dataIndex].n} games · dashed line = reg-season avg ${num(allAvg)}` };
+  draw('cWeek', { type: 'line', data: { labels: wk.map(p => p.l), datasets: [{ data: wk.map(p => p.m), borderColor: s1, borderWidth: 2, tension: .25,
+    pointRadius: wk.map(p => p.post ? 6 : 4), pointHoverRadius: 7, pointBackgroundColor: wk.map(p => p.post ? s2 : s1), pointBorderColor: cssVar('--surface'), pointBorderWidth: 2,
+    segment: { borderDash: c => wk[c.p1DataIndex] && wk[c.p1DataIndex].post ? [4, 4] : undefined } }] }, options: o3 });
+}
+
+/* Game log */
+let logRows = [];
+function renderLog(g) {
+  const q = $('#lgSearch').value.trim().toLowerCase(), ats = $('#lgAts').value, ou = $('#lgOu').value, venue = $('#lgVenue').value, c = $('#lgCtx').value;
+  logRows = g.filter(x => {
+    if (q && ![x.home, x.away, x.stadium, RAW.teamNames[x.home], RAW.teamNames[x.away]].some(s => s && s.toLowerCase().includes(q))) return false;
+    if (ats === 'fav' && !(x.favAtsM > 0)) return false;
+    if (ats === 'dog' && !(x.favAtsM < 0)) return false;
+    if (ats === 'push' && x.homeAtsM !== 0) return false;
+    if (ats === 'home' && !(x.homeAtsM > 0)) return false;
+    if (ats === 'away' && !(x.homeAtsM < 0)) return false;
+    if (ou && x.ou !== ou) return false;
+    if (venue === 'in' && !(x.roof && x.indoor)) return false;
+    if (venue === 'out' && !(x.roof && !x.indoor)) return false;
+    if (c === 'div' && !x.div) return false;
+    if (c === 'nondiv' && x.div) return false;
+    if (c === 'prime' && !x.prime) return false;
+    if (c === 'post' && !x.post) return false;
+    return true;
+  });
+  const line = x => x.spread == null ? '–' : x.spread === 0 ? `PK (${x.favTeam || '–'})` : `${x.favTeam} −${Math.abs(x.spread)}`;
+  table('#logTable', [
+    { k: 'date', h: 'Date' },
+    { k: 'wk', h: 'Wk', sort: r => r.season * 100 + (r.post ? 30 : r.week), f: r => r.post ? ROUND[r.type] : r.week },
+    { k: 'match', h: 'Matchup', sort: r => r.away + r.home, f: r => `${r.away} @ <b>${r.home}</b>${r.neutral ? ' <span class="pill mute">Neutral</span>' : ''}` },
+    { k: 'score', h: 'Score', sort: r => r.pts, f: r => `${r.as}–${r.hs}${r.ot ? ' OT' : ''}` },
+    { k: 'spread', h: 'Spread', sort: r => Math.abs(r.spread ?? 0), f: line },
+    { k: 'atsWinner', h: 'Covered', f: r => r.atsWinner === 'PUSH' ? '<span class="pill mute">Push</span>' : r.atsWinner ? `<span class="pill ${r.atsWinner === r.favTeam ? 'good' : 'bad'}">${r.atsWinner}${r.atsWinner === r.favTeam ? ' (fav)' : ' (dog)'}</span>` : '–' },
+    { k: 'total', h: 'Total', num: 1, f: r => r.total ?? '–' },
+    { k: 'pts', h: 'Pts', num: 1 },
+    { k: 'ou', h: 'O/U', f: r => r.ou ? `<span class="pill ${r.ou === 'Over' ? 'good' : r.ou === 'Under' ? 'bad' : 'mute'}">${r.ou}</span>` : '–' },
+    { k: 'margin', h: 'Margin', num: 1 },
+    { k: 'tags', h: 'Tags', sort: r => (r.div ? 2 : 0) + (r.prime ? 1 : 0), f: r => [r.div ? 'Div' : '', r.prime ? 'Prime' : '', r.indoor ? 'Indoor' : ''].filter(Boolean).join(' · ') },
+    { k: 'stadium', h: 'Stadium', f: r => esc(r.stadium) },
+  ], logRows, { key: 'date', desc: true, page: 25 });
+}
+function downloadCsv() {
+  const head = ['date', 'season', 'week', 'game_type', 'away', 'home', 'away_score', 'home_score', 'favorite', 'spread_fav', 'ats_cover', 'total_line', 'total_pts', 'ou_result', 'margin', 'divisional', 'prime_time', 'roof', 'stadium'];
+  const rows = logRows.map(x => [x.date, x.season, x.week, x.type, x.away, x.home, x.as, x.hs, x.favTeam || '', x.spread == null ? '' : Math.abs(x.spread), x.atsWinner, x.total ?? '', x.pts, x.ou, x.margin, x.div ? 1 : 0, x.prime ? 1 : 0, x.roof, x.stadium]);
+  const csv = [head, ...rows].map(r => r.map(v => /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : v).join(',')).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'nfl_games_filtered.csv'; a.click();
+}
+
+/* ---------- Sortable, paginated table ---------- */
+const tableState = {};
+function table(sel, cols, rows, opt) {
+  const st = tableState[sel] ||= { key: opt.key, desc: opt.desc, page: 0 };
+  if (st.sig !== rows.length + '|' + sel) { st.page = 0; st.sig = rows.length + '|' + sel; }
+  const col = cols.find(c => c.k === st.key) || cols[0];
+  const val = r => col.sort ? col.sort(r) : r[col.k];
+  const sorted = rows.slice().sort((a, b) => { const x = val(a), y = val(b); const c = (x > y) - (x < y) || (isNaN(x) - isNaN(y)); return st.desc ? -c : c; });
+  const per = opt.page || sorted.length, pages = Math.max(1, Math.ceil(sorted.length / per));
+  st.page = Math.min(st.page, pages - 1);
+  const shown = sorted.slice(st.page * per, st.page * per + per);
+  const el = $(sel);
+  if (!rows.length) { el.innerHTML = '<div class="empty">No rows match these filters.</div>'; return; }
+  el.innerHTML = `<table><thead><tr>${cols.map(c => `<th data-sort="${c.k}" class="${c.num ? 'num ' : ''}${c.k === st.key ? (st.desc ? 'desc' : 'asc') : ''}">${c.h}</th>`).join('')}</tr></thead>
+    <tbody>${shown.map(r => `<tr class="${opt.hl && opt.hl(r) ? 'hl' : ''}">${cols.map(c => `<td class="${c.num ? 'num' : ''}">${c.f ? c.f(r) : esc(r[c.k] ?? '–')}</td>`).join('')}</tr>`).join('')}</tbody></table>` +
+    (pages > 1 ? `<div class="pager"><span>${(st.page * per + 1).toLocaleString()}–${Math.min(sorted.length, (st.page + 1) * per).toLocaleString()} of ${sorted.length.toLocaleString()}</span><button data-p="-1" ${st.page ? '' : 'disabled'}>‹ Prev</button><button data-p="1" ${st.page < pages - 1 ? '' : 'disabled'}>Next ›</button></div>` : '');
+  el.querySelectorAll('th').forEach(th => th.onclick = () => { const k = th.dataset.sort; if (st.key === k) st.desc = !st.desc; else { st.key = k; st.desc = !cols.find(c => c.k === k).f || cols.find(c => c.k === k).num ? true : false; } st.page = 0; render(); });
+  el.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { st.page += +b.dataset.p; render(); });
+}
+
+/* ---------- Tabs, theme, boot ---------- */
+function setTab(t) {
+  tab = t;
+  document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('on', p.id === 'p-' + t));
+  try { localStorage.setItem('nfl-edge-tab', t); } catch (e) {}
+  render(); window.scrollTo({ top: 0 });
+}
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
+document.querySelectorAll('#teamRole button').forEach(b => b.onclick = () => {
+  teamRole = b.dataset.v; document.querySelectorAll('#teamRole button').forEach(x => x.setAttribute('aria-pressed', x === b)); render();
+});
+['#stMin', '#stSearch'].forEach(s => $(s).addEventListener('input', render));
+['#lgSearch', '#lgAts', '#lgOu', '#lgVenue', '#lgCtx'].forEach(s => $(s).addEventListener('input', render));
+$('#lgCsv').onclick = downloadCsv;
+$('#themeBtn').onclick = () => {
+  const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('nfl-edge-theme', document.documentElement.dataset.theme); } catch (e) {}
+  render();
+};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
+try { const th = localStorage.getItem('nfl-edge-theme'); if (th) document.documentElement.dataset.theme = th; } catch (e) {}
+Chart.defaults.font.family = 'Inter, -apple-system, Segoe UI, Roboto, sans-serif';
+Chart.defaults.font.size = 12;
+initFilters();
+$('#footer').textContent = `Source: ${RAW.meta.source}. ${GAMES.length.toLocaleString()} completed games, ${SEASONS[0]}–${SEASONS[SEASONS.length - 1]}; ${RAW.meta.unplayedExcluded} unplayed games excluded. Built ${RAW.meta.built}. Historical description only — not betting advice.`;
+let start = 'overview'; try { start = localStorage.getItem('nfl-edge-tab') || 'overview'; } catch (e) {}
+setTab(document.getElementById('p-' + start) ? start : 'overview');
+</script>
+</body>
+</html>
