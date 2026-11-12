@@ -13,17 +13,22 @@ Built with Python, Streamlit, Pandas and Plotly.
 |---|---|
 | Overview | Headline KPIs, a one-line answer to each question, metric definitions |
 | Team ATS | 1. Which teams cover the spread most often (all games / as favorite / as underdog)? |
-| Favorites & Home Field | 5. How does the favorite's cover rate change as the spread grows? 7. Do home teams or favorites cover more often? |
+| Spreads & Margins | 5. Favorite cover rate by spread size. 7. Home teams vs. favorites, home-field advantage. 3. Margin by game type. 6. Margin by week of the season |
 | Scoring & Stadiums | 2. Indoor vs. outdoor totals and over/under, by stadium. 4. Is league scoring rising or falling? |
-| Margin of Victory | 3. Divisional vs. non-divisional, playoff and prime-time margins. 6. Margin by week of the season |
-| Matchup Research | Enter a matchup, spread and total to see how both teams, head-to-head meetings and similar lines have turned out |
-| Game Log | Searchable, sortable, downloadable list of games |
+| Research | Matchup lookup (enter a matchup, spread and total to see how both teams, head-to-head meetings and similar lines have turned out) and a searchable, downloadable game log |
 
 Global filters: season range, regular season / playoffs, division, team. Pushes are excluded from cover % and over % and shown in the W-L-P record.
 
-Rebuild after refreshing the data:
+### Automatic updates and hosting
+
+`.github/workflows/update-dashboard.yml` runs every Tuesday morning (and on every push to `main`, or on demand from the Actions tab). It downloads the latest nflverse game file, rebuilds the dashboard, commits the refreshed data and publishes the dashboard to GitHub Pages.
+
+One-time setup: in the repository's **Settings → Pages**, set **Source** to **GitHub Actions**.
+
+To refresh by hand:
 
 ```bash
+python scripts/fetch_data.py        # download the latest results and lines (free, no API key)
 python scripts/build_dashboard.py   # dashboard/template.html + data/raw/games.csv -> dashboard/nfl_dashboard.html
 ```
 

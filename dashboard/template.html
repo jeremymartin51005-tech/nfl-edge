@@ -153,6 +153,9 @@ details.defs dd { margin: 0; color: var(--text-2); }
 .stat .k { flex: 1; min-width: 150px; color: var(--text-2); }
 .stat b { font-size: 15px; font-variant-numeric: tabular-nums; }
 .stat .r { color: var(--muted); font-variant-numeric: tabular-nums; min-width: 70px; text-align: right; }
+.form { display: inline-flex; gap: 3px; }
+.form i { width: 18px; height: 18px; border-radius: 4px; display: inline-grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 700; color: #fff; }
+.form i.w { background: var(--good); } .form i.l { background: var(--bad); } .form i.p { background: var(--neutral); }
 .note { font-size: 12px; color: var(--muted); margin-top: 8px; }
 .empty { padding: 40px; text-align: center; color: var(--muted); }
 </style>
@@ -172,11 +175,9 @@ details.defs dd { margin: 0; color: var(--text-2); }
     <nav class="tabs" role="tablist" id="tabs">
       <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
       <button role="tab" data-tab="teams">Team ATS</button>
-      <button role="tab" data-tab="lines">Favorites &amp; Home Field</button>
+      <button role="tab" data-tab="lines">Spreads &amp; Margins</button>
       <button role="tab" data-tab="scoring">Scoring &amp; Stadiums</button>
-      <button role="tab" data-tab="margins">Margin of Victory</button>
-      <button role="tab" data-tab="research">Matchup Research</button>
-      <button role="tab" data-tab="log">Game Log</button>
+      <button role="tab" data-tab="research">Research</button>
     </nav>
   </div>
 </header>
@@ -200,7 +201,7 @@ details.defs dd { margin: 0; color: var(--text-2); }
     <div class="answers" id="ovAnswers"></div>
     <div class="answer" style="margin-top:14px;flex-direction:row;align-items:center;gap:14px;flex-wrap:wrap">
       <div style="flex:1;min-width:240px"><div class="q">Looking at a specific game?</div><div class="a">Enter the matchup and the line you are offered to see how both teams and similar lines have performed.</div></div>
-      <button data-go="research" id="goResearch" style="margin:0">Open Matchup Research →</button></div>
+      <button data-go="research" id="goResearch" style="margin:0">Open Research →</button></div>
     <details class="defs">
       <summary>How each metric is calculated</summary>
       <dl>
@@ -240,9 +241,10 @@ details.defs dd { margin: 0; color: var(--text-2); }
 
   <!-- LINES -->
   <section class="page" id="p-lines">
-    <div class="intro"><h2><span class="qtag">Q5</span><span class="qtag">Q7</span>Favorites, spread size &amp; home field</h2>
-      <p>Does a bigger spread make a favorite more likely to cover? And who covers more often: home teams or favorites?</p></div>
+    <div class="intro"><h2><span class="qtag">Q3</span><span class="qtag">Q5</span><span class="qtag">Q6</span><span class="qtag">Q7</span>Spreads, home field &amp; margin of victory</h2>
+      <p>Does a bigger spread make a favorite more likely to cover? Do home teams or favorites cover more often? And how do game type and time of season change the margin of victory?</p></div>
     <div class="kpis" id="hfKpis"></div>
+    <div class="section-title">Favorites and home field (Q5, Q7)</div>
     <div class="grid g2">
       <div class="card"><h3>Favorite results by size of the spread</h3>
         <p class="sub">Win % climbs as favorites get bigger, but does their cover %?</p>
@@ -261,6 +263,16 @@ details.defs dd { margin: 0; color: var(--text-2); }
           <div><div class="legend"><span><i style="background:var(--s3)"></i>Home cover %</span></div><div class="chart" style="height:240px"><canvas id="cHfaAts"></canvas></div></div>
         </div></div>
     </div>
+    <div class="section-title">Margin of victory (Q3, Q6)</div>
+    <div class="grid g2">
+      <div class="card"><h3>Average margin by game type</h3>
+        <p class="sub">Average points between winner and loser. Hover for one-score % and sample size.</p>
+        <div class="chart"><canvas id="cCtx"></canvas></div></div>
+      <div class="card"><h3>Average margin as the season progresses</h3>
+        <p class="sub">Blue = regular-season weeks 1–18, orange = playoff rounds. Dashed line = regular-season average.</p>
+        <div class="chart"><canvas id="cWeek"></canvas></div></div>
+    </div>
+    <div class="kpis" id="phaseKpis" style="margin:14px 0 0"></div>
   </section>
 
   <!-- SCORING -->
@@ -286,26 +298,12 @@ details.defs dd { margin: 0; color: var(--text-2); }
       <div class="tbl-wrap" id="stadiumTable"></div></div>
   </section>
 
-  <!-- MARGINS -->
-  <section class="page" id="p-margins">
-    <div class="intro"><h2><span class="qtag">Q3</span><span class="qtag">Q6</span>Margin of victory</h2>
-      <p>Are divisional, playoff and prime-time games closer? How does the average margin change as the season goes on?</p></div>
-    <div class="grid g2">
-      <div class="card"><h3>Average margin by game type</h3>
-        <p class="sub">Average points between winner and loser. Hover for one-score % and sample size.</p>
-        <div class="chart"><canvas id="cCtx"></canvas></div></div>
-      <div class="card"><h3>Close games by game type</h3>
-        <p class="sub">Share of games decided by 7 points or fewer (one score)</p>
-        <div class="chart"><canvas id="cClose"></canvas></div></div>
-    </div>
-    <div class="card" style="margin-top:14px"><h3>Average margin as the season progresses</h3>
-      <p class="sub">Blue = regular-season weeks 1–18, orange = playoff rounds. Dashed line = regular-season average.</p>
-      <div class="kpis" id="phaseKpis" style="margin-bottom:10px"></div>
-      <div class="chart"><canvas id="cWeek"></canvas></div></div>
-  </section>
-
   <!-- RESEARCH -->
   <section class="page" id="p-research">
+    <div class="toolbar"><div class="seg" id="rsMode">
+      <button aria-pressed="true" data-v="matchup">Matchup lookup</button>
+      <button aria-pressed="false" data-v="log">Game log</button></div></div>
+    <div id="rsPane">
     <div class="intro"><h2>Matchup research</h2>
       <p>Thinking about a bet? Enter the game and the line you are being offered. The dashboard pulls up how these teams, and games with similar lines, have actually turned out. Uses the Season and Games filters above.</p></div>
     <div class="card" style="margin-bottom:14px">
@@ -329,10 +327,8 @@ details.defs dd { margin: 0; color: var(--text-2); }
         <li><b>Sample size matters.</b> Anything tagged <span class="pill mute">small sample</span> (under 30 graded games) can easily be luck. A 7-3 record is not a trend.</li>
         <li><b>The line already knows.</b> Sportsbooks set lines using this same history, which is why most rates sit near 50%. Past results describe what happened; they do not predict the next game.</li>
       </ul></div>
-  </section>
-
-  <!-- LOG -->
-  <section class="page" id="p-log">
+    </div>
+    <div id="lgPane" hidden>
     <div class="intro"><h2>Game log</h2><p>Every game in the current filters. Search by team or stadium, narrow by betting outcome, and download the result as CSV.</p></div>
     <div class="card">
       <div class="toolbar">
@@ -344,6 +340,7 @@ details.defs dd { margin: 0; color: var(--text-2); }
         <button class="btn" id="lgCsv" style="align-self:flex-end">Download CSV</button>
       </div>
       <div class="tbl-wrap" id="logTable"></div>
+    </div>
     </div>
   </section>
   <p class="note" id="footer"></p>
@@ -509,7 +506,7 @@ function render() {
   const who = F.team ? ` · games involving <b>${F.team}</b>` : F.div ? ` · games involving the <b>${F.div}</b>` : '';
   const partial = F.to === SEASONS[SEASONS.length - 1] ? ` · ${F.to} season is in progress (through ${RAW.meta.lastGame})` : '';
   $('#summary').innerHTML = `Showing <b>${g.length.toLocaleString()}</b> completed games · ${seasons} · ${type}${who}${partial}`;
-  ({ overview: renderOverview, teams: renderTeams, lines: renderLines, scoring: renderScoring, margins: renderMargins, research: renderResearch, log: renderLog })[tab](g);
+  ({ overview: renderOverview, teams: renderTeams, lines: renderLines, scoring: renderScoring, research: g => rsMode === 'log' ? renderLog(g) : renderResearch(g) })[tab](g);
 }
 
 function kpi(label, value, sub) { return `<div class="kpi"><div class="l">${label}</div><div class="v">${value}</div><div class="s">${sub || ''}</div></div>`; }
@@ -548,7 +545,7 @@ function renderOverview(g) {
   // Q3
   const dv = g.filter(x => x.div), nd = g.filter(x => !x.div), po = g.filter(x => x.post), pr = g.filter(x => x.prime);
   A.push(['How do divisional games affect margin of victory?', `Divisional games are decided by <b>${num(mean(dv.map(x => x.margin)))}</b> pts on average vs. <b>${num(mean(nd.map(x => x.margin)))}</b> in non-divisional games.` +
-    (pr.length ? ` Prime time: <b>${num(mean(pr.map(x => x.margin)))}</b>.` : '') + (po.length ? ` Playoffs: <b>${num(mean(po.map(x => x.margin)))}</b>.` : ''), 'margins']);
+    (pr.length ? ` Prime time: <b>${num(mean(pr.map(x => x.margin)))}</b>.` : '') + (po.length ? ` Playoffs: <b>${num(mean(po.map(x => x.margin)))}</b>.` : ''), 'lines']);
   // Q4
   const bySeason = SEASONS.filter(s => s >= F.from && s <= F.to).map(s => ({ s, v: mean(g.filter(x => x.season === s).map(x => x.pts)) })).filter(x => !isNaN(x.v));
   if (bySeason.length > 1) {
@@ -563,7 +560,7 @@ function renderOverview(g) {
   // Q6
   const reg = g.filter(x => !x.post);
   const e = reg.filter(x => x.week <= 6), lt = reg.filter(x => x.week >= 13);
-  if (e.length && lt.length) A.push(['How does margin of victory change as the season progresses?', `Weeks 1–6: <b>${num(mean(e.map(x => x.margin)))}</b> pts on average. Weeks 13–18: <b>${num(mean(lt.map(x => x.margin)))}</b> pts.` + (po.length ? ` Playoffs: <b>${num(mean(po.map(x => x.margin)))}</b>.` : ''), 'margins']);
+  if (e.length && lt.length) A.push(['How does margin of victory change as the season progresses?', `Weeks 1–6: <b>${num(mean(e.map(x => x.margin)))}</b> pts on average. Weeks 13–18: <b>${num(mean(lt.map(x => x.margin)))}</b> pts.` + (po.length ? ` Playoffs: <b>${num(mean(po.map(x => x.margin)))}</b>.` : ''), 'lines']);
   // Q7
   const hm = mean(g.filter(x => !x.neutral).map(x => x.result));
   A.push(['Do home teams or favorites cover more often?', `${home.pct > fav.pct ? '<b>Home teams</b>' : '<b>Favorites</b>'} cover more: home <b>${pct(home.pct)}</b> vs. favorites <b>${pct(fav.pct)}</b>. Home-field advantage: home teams win by <b>${num(hm)}</b> pts on average.`, 'lines']);
@@ -618,6 +615,7 @@ function renderTeams() {
 /* Favorites & home field */
 const BUCKETS = [['Pick–2.5', 0, 2.5], ['3', 3, 3], ['3.5–6.5', 3.5, 6.5], ['7', 7, 7], ['7.5–9.5', 7.5, 9.5], ['10–13.5', 10, 13.5], ['14+', 14, 99]];
 function renderLines(g) {
+  renderMargins(g);
   const nn = g.filter(x => !x.neutral);
   const hw = nn.filter(x => x.result > 0).length / nn.length;
   const home = grade(nn.map(x => x.homeAtsM)), fav = grade(g.map(x => x.favAtsM));
@@ -740,10 +738,6 @@ function renderMargins(g) {
   const o = baseOpts({ yMin: 0 }); o.plugins.barLabels = { fmt: v => num(v) };
   o.plugins.tooltip.callbacks = { label: i => { const r = ctx[i.dataIndex]; return [`Avg margin: ${num(r.m)} pts`, `One-score games (≤7): ${pct(r.close)}`, `Blowouts (≥17): ${pct(r.blow)}`]; }, footer: i => `n = ${ctx[i[0].dataIndex].n} games` };
   draw('cCtx', { type: 'bar', data: { labels: ctx.map(r => [r.l, `n=${r.n}`]), datasets: [{ data: ctx.map(r => r.m), backgroundColor: ctx.map(r => r.c), ...BAR }] }, options: o });
-  const o2 = baseOpts({ yPct: true, yMin: 0, yMax: 1 }); o2.plugins.barLabels = { fmt: v => pct(v, 0) };
-  o2.plugins.tooltip.callbacks = { label: i => `Decided by ≤ 7: ${pct(ctx[i.dataIndex].close)}`, footer: i => `n = ${ctx[i[0].dataIndex].n} games` };
-  draw('cClose', { type: 'bar', data: { labels: ctx.map(r => [r.l, `n=${r.n}`]), datasets: [{ data: ctx.map(r => r.close), backgroundColor: ctx.map(r => r.c), ...BAR }] }, options: o2 });
-
   const reg = g.filter(x => !x.post), po = g.filter(x => x.post);
   const ph = [['Early season', 'Weeks 1–6', reg.filter(x => x.week <= 6)], ['Mid season', 'Weeks 7–12', reg.filter(x => x.week >= 7 && x.week <= 12)], ['Late season', 'Weeks 13–18', reg.filter(x => x.week >= 13)], ['Playoffs', 'All rounds', po]];
   $('#phaseKpis').innerHTML = ph.map(([l, s, gs]) => kpi(l, gs.length ? num(mean(gs.map(x => x.margin))) + ' pts' : '–', `${s} · n=${gs.length}`)).join('');
@@ -818,6 +812,8 @@ function renderResearch() {
     const role = t === favT ? 'favorite' : t === dogT ? 'underdog' : null;
     const inRole = role ? mine.filter(x => (role === 'favorite' ? x.favTeam : x.dogTeam) === t) : [];
     const both = role ? inRole.filter(x => !x.neutral && (isHome ? x.home === t : x.away === t)) : [];
+    const last = mine.filter(x => tm(x) != null).slice(0, 10);
+    const form = last.map(x => { const m = tm(x); return `<i class="${m > 0 ? 'w' : m < 0 ? 'l' : 'p'}" title="${x.date} ${x.away} @ ${x.home} ${x.as}–${x.hs}">${m > 0 ? 'W' : m < 0 ? 'L' : 'P'}</i>`; }).join('');
     const pf = mean(mine.map(x => x.home === t ? x.hs : x.as)), pa = mean(mine.map(x => x.home === t ? x.as : x.hs));
     const su = mine.filter(x => (x.home === t ? x.result : -x.result) > 0).length;
     return `<div class="card"><h3>${RAW.teamNames[t]} <span style="color:var(--muted);font-weight:500">· ${isHome ? 'home' : 'away'}${role ? ' ' + role : ''}</span></h3>
@@ -827,7 +823,8 @@ function renderResearch() {
       ${role ? stat(`ATS as a${role === 'underdog' ? 'n' : ''} ${role}`, grade(inRole.map(tm))) : ''}
       ${role ? stat(`ATS as a ${isHome ? 'home' : 'road'} ${role}`, grade(both.map(tm))) : ''}
       ${stat('Their games going over', grade(mine.map(x => x.ouM)))}
-      ${stat(`Over ${isHome ? 'at home' : 'on the road'}`, grade(spot.map(x => x.ouM)))}</div>`;
+      ${stat(`Over ${isHome ? 'at home' : 'on the road'}`, grade(spot.map(x => x.ouM)))}
+      <div class="stat"><span class="k">Last ${last.length} vs. the spread (newest first)</span><span class="form">${form || '–'}</span></div></div>`;
   };
   $('#rsTeams').innerHTML = away === home ? '<div class="empty">Pick two different teams.</div>' : card(away, false) + card(home, true);
 
@@ -852,7 +849,7 @@ function renderResearch() {
 }
 
 /* Game log */
-let logRows = [];
+let logRows = [], rsMode = 'matchup';
 function renderLog(g) {
   const q = $('#lgSearch').value.trim().toLowerCase(), ats = $('#lgAts').value, ou = $('#lgOu').value, venue = $('#lgVenue').value, c = $('#lgCtx').value;
   logRows = g.filter(x => {
@@ -924,6 +921,10 @@ function setTab(t) {
 }
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
 $('#goResearch').onclick = () => setTab('research');
+document.querySelectorAll('#rsMode button').forEach(b => b.onclick = () => {
+  rsMode = b.dataset.v; document.querySelectorAll('#rsMode button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  $('#rsPane').hidden = rsMode !== 'matchup'; $('#lgPane').hidden = rsMode === 'matchup'; render();
+});
 document.querySelectorAll('#teamRole button').forEach(b => b.onclick = () => {
   teamRole = b.dataset.v; document.querySelectorAll('#teamRole button').forEach(x => x.setAttribute('aria-pressed', x === b)); render();
 });
@@ -944,7 +945,7 @@ try { const th = localStorage.getItem('nfl-edge-theme'); if (th) document.docume
 Chart.defaults.font.family = 'Inter, -apple-system, Segoe UI, Roboto, sans-serif';
 Chart.defaults.font.size = 12;
 initFilters();
-$('#footer').textContent = `Source: ${RAW.meta.source}. ${GAMES.length.toLocaleString()} completed games, ${SEASONS[0]}–${SEASONS[SEASONS.length - 1]}; ${RAW.meta.unplayedExcluded} unplayed games excluded. Built ${RAW.meta.built}. Historical description only — not betting advice.`;
+$('#footer').textContent = `Source: ${RAW.meta.source}. ${GAMES.length.toLocaleString()} completed games, ${SEASONS[0]}–${SEASONS[SEASONS.length - 1]}; ${RAW.meta.unplayedExcluded} unplayed games excluded. Data through ${RAW.meta.lastGame}; updated ${RAW.meta.built}. Historical description only — not betting advice.`;
 let start = 'overview'; try { start = localStorage.getItem('nfl-edge-tab') || 'overview'; } catch (e) {}
 setTab(document.getElementById('p-' + start) ? start : 'overview');
 </script>
