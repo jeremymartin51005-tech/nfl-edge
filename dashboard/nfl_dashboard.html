@@ -167,9 +167,6 @@ details.defs dd { margin: 0; color: var(--text-2); }
 .stat .k { flex: 1; min-width: 150px; color: var(--text-2); }
 .stat b { font-size: 15px; font-variant-numeric: tabular-nums; }
 .stat .r { color: var(--muted); font-variant-numeric: tabular-nums; min-width: 70px; text-align: right; }
-.form { display: inline-flex; gap: 3px; }
-.form i { width: 18px; height: 18px; border-radius: 4px; display: inline-grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 700; color: #fff; }
-.form i.w { background: var(--good); } .form i.l { background: var(--bad); } .form i.p { background: var(--neutral); }
 .note { font-size: 12px; color: var(--muted); margin-top: 8px; }
 .empty { padding: 40px; text-align: center; color: var(--muted); }
 </style>
@@ -835,8 +832,6 @@ function renderResearch() {
     const role = t === favT ? 'favorite' : t === dogT ? 'underdog' : null;
     const inRole = role ? mine.filter(x => (role === 'favorite' ? x.favTeam : x.dogTeam) === t) : [];
     const both = role ? inRole.filter(x => !x.neutral && (isHome ? x.home === t : x.away === t)) : [];
-    const last = mine.filter(x => tm(x) != null).slice(0, 10);
-    const form = last.map(x => { const m = tm(x); return `<i class="${m > 0 ? 'w' : m < 0 ? 'l' : 'p'}" title="${x.date} ${x.away} @ ${x.home} ${x.as}–${x.hs}">${m > 0 ? 'W' : m < 0 ? 'L' : 'P'}</i>`; }).join('');
     const pf = mean(mine.map(x => x.home === t ? x.hs : x.as)), pa = mean(mine.map(x => x.home === t ? x.as : x.hs));
     const su = mine.filter(x => (x.home === t ? x.result : -x.result) > 0).length;
     return `<div class="card"><h3>${RAW.teamNames[t]} <span style="color:var(--muted);font-weight:500">· ${isHome ? 'home' : 'away'}${role ? ' ' + role : ''}</span></h3>
@@ -846,8 +841,7 @@ function renderResearch() {
       ${role ? stat(`ATS as a${role === 'underdog' ? 'n' : ''} ${role}`, grade(inRole.map(tm))) : ''}
       ${role ? stat(`ATS as a ${isHome ? 'home' : 'road'} ${role}`, grade(both.map(tm))) : ''}
       ${stat('Their games going over', grade(mine.map(x => x.ouM)))}
-      ${stat(`Over ${isHome ? 'at home' : 'on the road'}`, grade(spot.map(x => x.ouM)))}
-      <div class="stat"><span class="k">Last ${last.length} vs. the spread (newest first)</span><span class="form">${form || '–'}</span></div></div>`;
+      ${stat(`Over ${isHome ? 'at home' : 'on the road'}`, grade(spot.map(x => x.ouM)))}</div>`;
   };
   $('#rsTeams').innerHTML = away === home ? '<div class="empty">Pick two different teams.</div>' : card(away, false) + card(home, true);
 
