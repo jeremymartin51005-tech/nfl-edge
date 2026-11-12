@@ -148,6 +148,14 @@ details.defs dl { display: grid; grid-template-columns: 200px 1fr; gap: 6px 16px
 details.defs dt { font-weight: 600; }
 details.defs dd { margin: 0; color: var(--text-2); }
 @media (max-width: 700px) { details.defs dl { grid-template-columns: 1fr; } .wrap { padding: 0 16px 40px; } }
+.stat { display: flex; align-items: baseline; gap: 8px; padding: 7px 0; border-top: 1px solid var(--grid); font-size: 13px; flex-wrap: wrap; }
+.stat:first-of-type { border-top: 0; }
+.stat .k { flex: 1; min-width: 150px; color: var(--text-2); }
+.stat b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.stat .r { color: var(--muted); font-variant-numeric: tabular-nums; min-width: 70px; text-align: right; }
+.form { display: inline-flex; gap: 3px; }
+.form i { width: 18px; height: 18px; border-radius: 4px; display: inline-grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 700; color: #fff; }
+.form i.w { background: var(--good); } .form i.l { background: var(--bad); } .form i.p { background: var(--neutral); }
 .note { font-size: 12px; color: var(--muted); margin-top: 8px; }
 .empty { padding: 40px; text-align: center; color: var(--muted); }
 </style>
@@ -170,6 +178,7 @@ details.defs dd { margin: 0; color: var(--text-2); }
       <button role="tab" data-tab="lines">Favorites &amp; Home Field</button>
       <button role="tab" data-tab="scoring">Scoring &amp; Stadiums</button>
       <button role="tab" data-tab="margins">Margin of Victory</button>
+      <button role="tab" data-tab="research">Matchup Research</button>
       <button role="tab" data-tab="log">Game Log</button>
     </nav>
   </div>
@@ -192,6 +201,9 @@ details.defs dd { margin: 0; color: var(--text-2); }
     <div class="kpis" id="ovKpis"></div>
     <div class="section-title">Answers to the 7 questions (update with filters)</div>
     <div class="answers" id="ovAnswers"></div>
+    <div class="answer" style="margin-top:14px;flex-direction:row;align-items:center;gap:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:240px"><div class="q">Looking at a specific game?</div><div class="a">Enter the matchup and the line you are offered to see how both teams and similar lines have performed.</div></div>
+      <button data-go="research" id="goResearch" style="margin:0">Open Matchup Research →</button></div>
     <details class="defs">
       <summary>How each metric is calculated</summary>
       <dl>
@@ -293,6 +305,33 @@ details.defs dd { margin: 0; color: var(--text-2); }
       <p class="sub">Blue = regular-season weeks 1–18, orange = playoff rounds. Dashed line = regular-season average.</p>
       <div class="kpis" id="phaseKpis" style="margin-bottom:10px"></div>
       <div class="chart"><canvas id="cWeek"></canvas></div></div>
+  </section>
+
+  <!-- RESEARCH -->
+  <section class="page" id="p-research">
+    <div class="intro"><h2>Matchup research</h2>
+      <p>Thinking about a bet? Enter the game and the line you are being offered. The dashboard pulls up how these teams, and games with similar lines, have actually turned out. Uses the Season and Games filters above.</p></div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="toolbar" style="margin-bottom:0">
+        <div class="f"><label for="rsAway">Away team</label><select id="rsAway"></select></div>
+        <div class="f"><label for="rsHome">Home team</label><select id="rsHome"></select></div>
+        <div class="f"><label for="rsSpread">Home team spread</label><input id="rsSpread" type="number" step="0.5" value="-2.5" style="width:130px"></div>
+        <div class="f"><label for="rsTotal">Over / under total</label><input id="rsTotal" type="number" step="0.5" value="46.5" style="width:130px"></div>
+        <span class="hint" id="rsLine" style="align-self:flex-end;padding-bottom:7px"></span>
+      </div>
+      <p class="note">Spread uses sportsbook notation for the home team: <b>−3</b> means the home team is favored by 3, <b>+3</b> means the home team is a 3-point underdog.</p>
+    </div>
+    <div class="section-title">How similar lines have turned out</div>
+    <div class="grid g2" id="rsMarket"></div>
+    <div class="section-title">The two teams</div>
+    <div class="grid g2" id="rsTeams"></div>
+    <div class="card" style="margin-top:14px"><h3 id="rsH2hTitle">Head to head</h3><p class="sub" id="rsH2hSub"></p><div class="tbl-wrap" id="rsH2h"></div></div>
+    <div class="card" style="margin-top:14px"><h3>How to read this</h3>
+      <ul style="margin:8px 0 0;padding-left:18px;color:var(--text-2);font-size:13px;line-height:1.6">
+        <li><b>52.4%</b> is the break-even win rate at standard −110 odds. A side has to win more often than that to make money. Rates are tagged <span class="pill good">above break-even</span>, <span class="pill bad">below 47.6%</span> (the other side is above break-even) or <span class="pill mute">coin flip</span>.</li>
+        <li><b>Sample size matters.</b> Anything tagged <span class="pill mute">small sample</span> (under 30 graded games) can easily be luck. A 7-3 record is not a trend.</li>
+        <li><b>The line already knows.</b> Sportsbooks set lines using this same history, which is why most rates sit near 50%. Past results describe what happened; they do not predict the next game.</li>
+      </ul></div>
   </section>
 
   <!-- LOG -->
@@ -473,7 +512,7 @@ function render() {
   const who = F.team ? ` · games involving <b>${F.team}</b>` : F.div ? ` · games involving the <b>${F.div}</b>` : '';
   const partial = F.to === SEASONS[SEASONS.length - 1] ? ` · ${F.to} season is in progress (through ${RAW.meta.lastGame})` : '';
   $('#summary').innerHTML = `Showing <b>${g.length.toLocaleString()}</b> completed games · ${seasons} · ${type}${who}${partial}`;
-  ({ overview: renderOverview, teams: renderTeams, lines: renderLines, scoring: renderScoring, margins: renderMargins, log: renderLog })[tab](g);
+  ({ overview: renderOverview, teams: renderTeams, lines: renderLines, scoring: renderScoring, margins: renderMargins, research: renderResearch, log: renderLog })[tab](g);
 }
 
 function kpi(label, value, sub) { return `<div class="kpi"><div class="l">${label}</div><div class="v">${value}</div><div class="s">${sub || ''}</div></div>`; }
@@ -724,6 +763,100 @@ function renderMargins(g) {
     segment: { borderDash: c => wk[c.p1DataIndex] && wk[c.p1DataIndex].post ? [4, 4] : undefined } }] }, options: o3 });
 }
 
+/* Matchup research */
+const BE = 0.5238;
+function tag(gr) {
+  if (!gr.n) return '<span class="pill mute">no games</span>';
+  const small = gr.w + gr.l < 30 ? ' <span class="pill mute">small sample</span>' : '';
+  const t = gr.pct > BE ? '<span class="pill good">above break-even</span>' : gr.pct < 1 - BE ? '<span class="pill bad">below 47.6%</span>' : '<span class="pill mute">coin flip</span>';
+  return t + small;
+}
+const stat = (k, gr) => `<div class="stat"><span class="k">${k}</span><b>${pct(gr.pct)}</b><span class="r">${gr.rec}</span>${tag(gr)}</div>`;
+const plain = (k, v, r = '') => `<div class="stat"><span class="k">${k}</span><b>${v}</b><span class="r">${r}</span></div>`;
+function renderResearch() {
+  const gs = baseGames(), away = $('#rsAway').value, home = $('#rsHome').value;
+  const sp = parseFloat($('#rsSpread').value), tot = parseFloat($('#rsTotal').value);
+  const hasSp = !isNaN(sp), hasTot = !isNaN(tot), L = Math.abs(sp);
+  const favT = !hasSp || sp === 0 ? null : sp < 0 ? home : away, dogT = favT === home ? away : favT ? home : null;
+  $('#rsLine').innerHTML = away === home ? 'Pick two different teams.' : `<b>${away} @ ${home}</b>` + (hasSp ? ` · ${favT ? favT + ' −' + L : "pick'em"}` : '') + (hasTot ? ` · O/U ${tot}` : '');
+  const nm = t => `${t} ${RAW.teamNames[t].split(' ').pop()}`;
+
+  // --- similar lines across the league ---
+  let left = '<div class="card"><h3>Spread</h3><p class="sub">Enter a spread to see similar games.</p></div>';
+  if (hasSp) {
+    const sim = gs.filter(x => x.fav && Math.abs(Math.abs(x.spread) - L) <= 1);
+    const same = sim.filter(x => !x.neutral && (favT ? x.fav === (favT === home ? 1 : -1) : true));
+    const exact = gs.filter(x => x.fav && Math.abs(x.spread) === L);
+    const where = favT === home ? 'Home' : 'Road';
+    left = `<div class="card"><h3>Spread: favorites laying ${Math.max(0, L - 1)} to ${L + 1} points</h3><p class="sub">All teams, league-wide. How often did the favorite cover?</p>
+      ${stat('All favorites in this range', grade(sim.map(x => x.favAtsM)))}
+      ${favT ? stat(`${where} favorites in this range (like ${favT})`, grade(same.map(x => x.favAtsM))) : ''}
+      ${stat(`Favorites laying exactly ${L}`, grade(exact.map(x => x.favAtsM)))}
+      ${plain('Favorite won the game outright', pct(sim.filter(x => x.favWon === 1).length / sim.length), `${sim.length} games`)}
+      ${plain('Avg favorite margin vs. the spread', sim.length ? ((mean(sim.map(x => x.favAtsM)) >= 0 ? '+' : '') + num(mean(sim.map(x => x.favAtsM))) + ' pts') : '–')}
+      <p class="note">Underdog cover % is 100% minus the favorite's rate.</p></div>`;
+  }
+  let right = '<div class="card"><h3>Total</h3><p class="sub">Enter a total to see similar games.</p></div>';
+  if (hasTot) {
+    const sim = gs.filter(x => x.total != null && Math.abs(x.total - tot) <= 2);
+    const hg = gs.filter(x => x.home === home && !x.neutral && x.roof);
+    const indoor = hg.length ? hg.filter(x => x.indoor).length > hg.length / 2 : null;
+    const ven = indoor == null ? [] : sim.filter(x => x.roof && x.indoor === indoor);
+    const div = DIV_OF[home] === DIV_OF[away];
+    right = `<div class="card"><h3>Total: games lined ${tot - 2} to ${tot + 2}</h3><p class="sub">All teams, league-wide. How often did the game go over?</p>
+      ${stat('All games in this range: over %', grade(sim.map(x => x.ouM)))}
+      ${indoor == null ? '' : stat(`${indoor ? 'Indoor' : 'Outdoor'} games in this range (like ${home}'s stadium)`, grade(ven.map(x => x.ouM)))}
+      ${stat(`${div ? 'Divisional' : 'Non-divisional'} games in this range`, grade(sim.filter(x => !!x.div === div).map(x => x.ouM)))}
+      ${plain('Avg actual points in these games', num(mean(sim.map(x => x.pts))), `${sim.length} games`)}
+      ${plain('Avg points vs. the total', sim.length ? ((mean(sim.map(x => x.ouM)) >= 0 ? '+' : '') + num(mean(sim.map(x => x.ouM))) + ' pts') : '–')}
+      <p class="note">Under % is 100% minus the over rate.</p></div>`;
+  }
+  $('#rsMarket').innerHTML = left + right;
+
+  // --- team cards ---
+  const card = (t, isHome) => {
+    const mine = gs.filter(x => x.home === t || x.away === t).sort((a, b) => a.date < b.date ? 1 : -1);
+    const tm = x => x.homeAtsM == null ? null : (x.home === t ? x.homeAtsM : -x.homeAtsM);
+    const spot = mine.filter(x => !x.neutral && (isHome ? x.home === t : x.away === t));
+    const role = t === favT ? 'favorite' : t === dogT ? 'underdog' : null;
+    const inRole = role ? mine.filter(x => (role === 'favorite' ? x.favTeam : x.dogTeam) === t) : [];
+    const both = role ? inRole.filter(x => !x.neutral && (isHome ? x.home === t : x.away === t)) : [];
+    const last = mine.filter(x => tm(x) != null).slice(0, 10);
+    const form = last.map(x => { const m = tm(x); return `<i class="${m > 0 ? 'w' : m < 0 ? 'l' : 'p'}" title="${x.date} ${x.away} @ ${x.home} ${x.as}–${x.hs}">${m > 0 ? 'W' : m < 0 ? 'L' : 'P'}</i>`; }).join('');
+    const pf = mean(mine.map(x => x.home === t ? x.hs : x.as)), pa = mean(mine.map(x => x.home === t ? x.as : x.hs));
+    const su = mine.filter(x => (x.home === t ? x.result : -x.result) > 0).length;
+    return `<div class="card"><h3>${RAW.teamNames[t]} <span style="color:var(--muted);font-weight:500">· ${isHome ? 'home' : 'away'}${role ? ' ' + role : ''}</span></h3>
+      <p class="sub">${mine.length} games in the selected seasons · ${su}-${mine.length - su} straight up · scores ${num(pf)}, allows ${num(pa)} per game</p>
+      ${stat('Against the spread, all games', grade(mine.map(tm)))}
+      ${stat(`ATS ${isHome ? 'at home' : 'on the road'}`, grade(spot.map(tm)))}
+      ${role ? stat(`ATS as a${role === 'underdog' ? 'n' : ''} ${role}`, grade(inRole.map(tm))) : ''}
+      ${role ? stat(`ATS as a ${isHome ? 'home' : 'road'} ${role}`, grade(both.map(tm))) : ''}
+      ${stat('Their games going over', grade(mine.map(x => x.ouM)))}
+      ${stat(`Over ${isHome ? 'at home' : 'on the road'}`, grade(spot.map(x => x.ouM)))}
+      <div class="stat"><span class="k">Last ${last.length} vs. the spread (newest first)</span><span class="form">${form || '–'}</span></div></div>`;
+  };
+  $('#rsTeams').innerHTML = away === home ? '<div class="empty">Pick two different teams.</div>' : card(away, false) + card(home, true);
+
+  // --- head to head ---
+  const h2h = gs.filter(x => (x.home === home && x.away === away) || (x.home === away && x.away === home));
+  $('#rsH2hTitle').textContent = `Head to head: ${nm(away)} vs. ${nm(home)}`;
+  if (away !== home && h2h.length) {
+    const aw = h2h.filter(x => (x.home === away ? x.result : -x.result) > 0).length;
+    const aa = grade(h2h.map(x => x.homeAtsM == null ? null : x.home === away ? x.homeAtsM : -x.homeAtsM)), ou = grade(h2h.map(x => x.ouM));
+    $('#rsH2hSub').innerHTML = `${h2h.length} meeting${h2h.length > 1 ? 's' : ''} · ${away} won ${aw}, ${home} won ${h2h.length - aw - h2h.filter(x => x.result === 0).length} · ${away} ATS ${aa.rec} · Over-Under ${ou.w}-${ou.l}-${ou.p} · avg ${num(mean(h2h.map(x => x.pts)))} points`;
+  } else $('#rsH2hSub').textContent = 'No meetings in the selected seasons.';
+  table('#rsH2h', [
+    { k: 'date', h: 'Date' },
+    { k: 'match', h: 'Matchup', sort: r => r.home, f: r => `${r.away} @ <b>${r.home}</b>` },
+    { k: 'score', h: 'Score', sort: r => r.pts, f: r => `${r.as}–${r.hs}${r.ot ? ' OT' : ''}` },
+    { k: 'spread', h: 'Spread', sort: r => Math.abs(r.spread ?? 0), f: r => r.spread == null ? '–' : r.spread === 0 ? 'PK' : `${r.favTeam} −${Math.abs(r.spread)}` },
+    { k: 'atsWinner', h: 'Covered', f: r => r.atsWinner === 'PUSH' ? '<span class="pill mute">Push</span>' : r.atsWinner ? `<span class="pill">${r.atsWinner}</span>` : '–' },
+    { k: 'total', h: 'Total', num: 1, f: r => r.total ?? '–' },
+    { k: 'pts', h: 'Pts', num: 1 },
+    { k: 'ou', h: 'O/U', f: r => r.ou ? `<span class="pill ${r.ou === 'Over' ? 'good' : r.ou === 'Under' ? 'bad' : 'mute'}">${r.ou}</span>` : '–' },
+  ], away === home ? [] : h2h, { key: 'date', desc: true, page: 10 });
+}
+
 /* Game log */
 let logRows = [];
 function renderLog(g) {
@@ -796,12 +929,16 @@ function setTab(t) {
   render(); window.scrollTo({ top: 0 });
 }
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
+$('#goResearch').onclick = () => setTab('research');
 document.querySelectorAll('#teamRole button').forEach(b => b.onclick = () => {
   teamRole = b.dataset.v; document.querySelectorAll('#teamRole button').forEach(x => x.setAttribute('aria-pressed', x === b)); render();
 });
 ['#stMin', '#stSearch'].forEach(s => $(s).addEventListener('input', render));
 ['#lgSearch', '#lgAts', '#lgOu', '#lgVenue', '#lgCtx'].forEach(s => $(s).addEventListener('input', render));
 $('#lgCsv').onclick = downloadCsv;
+$('#rsAway').innerHTML = TEAMS.map(t => `<option value="${t}"${t === 'KC' ? ' selected' : ''}>${t} – ${RAW.teamNames[t]}</option>`).join('');
+$('#rsHome').innerHTML = TEAMS.map(t => `<option value="${t}"${t === 'BUF' ? ' selected' : ''}>${t} – ${RAW.teamNames[t]}</option>`).join('');
+['#rsAway', '#rsHome', '#rsSpread', '#rsTotal'].forEach(s => $(s).addEventListener('input', render));
 $('#themeBtn').onclick = () => {
   const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
   document.documentElement.dataset.theme = dark ? 'light' : 'dark';

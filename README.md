@@ -16,6 +16,7 @@ Built with Python, Streamlit, Pandas and Plotly.
 | Favorites & Home Field | 5. How does the favorite's cover rate change as the spread grows? 7. Do home teams or favorites cover more often? |
 | Scoring & Stadiums | 2. Indoor vs. outdoor totals and over/under, by stadium. 4. Is league scoring rising or falling? |
 | Margin of Victory | 3. Divisional vs. non-divisional, playoff and prime-time margins. 6. Margin by week of the season |
+| Matchup Research | Enter a matchup, spread and total to see how both teams, head-to-head meetings and similar lines have turned out |
 | Game Log | Searchable, sortable, downloadable list of games |
 
 Global filters: season range, regular season / playoffs, division, team. Pushes are excluded from cover % and over % and shown in the W-L-P record.
