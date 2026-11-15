@@ -91,6 +91,15 @@ nav.tabs button[aria-selected="true"] { color: var(--text); border-bottom-color:
 .kpi .l { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-2); font-weight: 600; }
 .kpi .v { font-size: 24px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
 .kpi .s { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.kpi .c { font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border); }
+.who { display: grid; grid-template-columns: minmax(200px, 1fr) 2.4fr; gap: 8px 28px; margin-bottom: 4px; }
+@media (max-width: 800px) { .who { grid-template-columns: 1fr; } }
+.who .q { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+.who p { margin: 0; font-size: 14.5px; }
+.who ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.who button { background: var(--accent-bg); border: 0; color: var(--s1); border-radius: 999px; padding: 1px 9px; font-size: 11.5px; font-weight: 600; cursor: pointer; margin-left: 4px; }
+.answer .imp { font-size: 13px; color: var(--text-2); border-top: 1px dashed var(--border); padding-top: 6px; }
+.answer .imp b { color: var(--text); }
 .section-title { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; margin: 22px 0 10px; }
 
 /* Answer cards */
@@ -193,7 +202,21 @@ details.defs dd { margin: 0; color: var(--text-2); }
 
   <!-- OVERVIEW -->
   <section class="page on" id="p-overview">
+    <div class="card who">
+      <div><div class="q">Who this is for</div>
+        <p>A <b>recreational NFL bettor</b> researching a game before placing a point-spread or over/under bet.</p></div>
+      <div><div class="q">Decisions it supports</div>
+        <ol>
+          <li>Should I back the <b>favorite or the underdog</b> at this spread size? <button data-go="lines">Spreads &amp; Margins</button></li>
+          <li>Should I bet the <b>over or the under</b>, given the stadium and the total? <button data-go="scoring">Scoring &amp; Stadiums</button></li>
+          <li>Which <b>teams</b> have been reliable or unreliable against the spread? <button data-go="teams">Team ATS</button></li>
+          <li>How have <b>these two teams and similar lines</b> done in this exact spot? <button data-go="research">Research</button></li>
+        </ol></div>
+    </div>
+    <div class="section-title">Key metrics <span style="text-transform:none;letter-spacing:0;font-weight:500">· each compared with a benchmark</span></div>
     <div class="kpis" id="ovKpis"></div>
+    <div class="section-title">Key insights and what they mean for a bettor <span style="text-transform:none;letter-spacing:0;font-weight:500" id="insScope"></span></div>
+    <div class="answers" id="ovInsights"></div>
     <div class="section-title">Answers to the 7 questions (update with filters)</div>
     <div class="answers" id="ovAnswers"></div>
     <div class="answer" style="margin-top:14px;flex-direction:row;align-items:center;gap:14px;flex-wrap:wrap">
@@ -211,6 +234,9 @@ details.defs dd { margin: 0; color: var(--text-2); }
         <dt>Indoor / Outdoor</dt><dd>Indoor = dome or retractable roof closed. Outdoor = open-air stadium or retractable roof open.</dd>
         <dt>Prime time</dt><dd>Kickoff at 7:00 PM ET or later (Thursday, Sunday and Monday night games, plus late Saturday/holiday games).</dd>
         <dt>Divisional game</dt><dd>Both teams are in the same division (current 8-division alignment).</dd>
+        <dt>Points per game</dt><dd>Home score + away score, averaged over games (points per game). All completed games included.</dd>
+        <dt>Benchmarks</dt><dd>Cover % and Over % are compared with the <b>52.4% break-even</b> rate. When a filter narrows the games, each metric is also compared with the <b>league baseline</b> (all teams, all seasons, same regular-season/playoff setting). Points and margin are compared with the <b>previous season</b> in view.</dd>
+        <dt>Limitations</dt><dd>Closing lines only (no opening lines or line movement); one consensus line, not a specific sportsbook; standard −110 pricing assumed for break-even; the current season is partial; small samples (single seasons, playoffs, one team in one role) are noisy. Past results describe what happened and do not predict future games.</dd>
         <dt>Team / Division filters</dt><dd>Keep only games involving that team (or any team in that division). On the Team ATS tab they instead choose which teams appear and highlight the selected team.</dd>
       </dl>
     </details>
@@ -506,22 +532,41 @@ function render() {
   ({ overview: renderOverview, teams: renderTeams, lines: renderLines, scoring: renderScoring, research: g => rsMode === 'log' ? renderLog(g) : renderResearch(g) })[tab](g);
 }
 
-function kpi(label, value, sub) { return `<div class="kpi"><div class="l">${label}</div><div class="v">${value}</div><div class="s">${sub || ''}</div></div>`; }
+function kpi(label, value, sub, ctx) { return `<div class="kpi"><div class="l">${label}</div><div class="v">${value}</div><div class="s">${sub || ''}</div>${ctx ? `<div class="c">${ctx}</div>` : ''}</div>`; }
 
 /* Overview */
 function renderOverview(g) {
-  if (!g.length) { $('#ovKpis').innerHTML = ''; $('#ovAnswers').innerHTML = '<div class="empty">No games match these filters.</div>'; return; }
+  if (!g.length) { $('#ovKpis').innerHTML = ''; $('#ovInsights').innerHTML = ''; $('#ovAnswers').innerHTML = '<div class="empty">No games match these filters.</div>'; return; }
   const fav = grade(g.map(x => x.favAtsM));
   const home = grade(g.filter(x => !x.neutral).map(x => x.homeAtsM));
   const ou = grade(g.map(x => x.ouM));
+  // --- benchmarks: league baseline (all teams, all seasons, same game-type filter) and previous season ---
+  const lg = GAMES.filter(x => F.type === 'all' || (F.type === 'REG' ? !x.post : x.post));
+  const narrowed = g.length !== lg.length;
+  const span = `${SEASONS[0]}–${SEASONS[SEASONS.length - 1]}`;
+  const arrow = d => +d.toFixed(1) > 0 ? '▲' : +d.toFixed(1) < 0 ? '▼' : '■';
+  const sgn = (d, dp = 1) => { const r = +d.toFixed(dp); return (r > 0 ? '+' : r < 0 ? '−' : '') + Math.abs(r).toFixed(dp); };
+  const be = r => `${arrow((r - BE) * 100)} ${sgn((r - BE) * 100)} pts vs. 52.4% break-even`;
+  const vsLg = (v, base, unit, pctMode) => `${arrow(pctMode ? (v - base) * 100 : v - base)} ${sgn(pctMode ? (v - base) * 100 : v - base)}${unit} vs. league ${span} (${pctMode ? pct(base) : num(base)})`;
+  const ss = [...new Set(g.map(x => x.season))].sort((x, y) => x - y);
+  const prevCmp = (fn, unit) => {                      // latest season in view vs. the one before it
+    if (ss.length < 2) return '';
+    const l = ss[ss.length - 1], p = ss[ss.length - 2];
+    const lv = fn(g.filter(x => x.season === l)), pv = fn(g.filter(x => x.season === p));
+    return `${arrow(lv - pv)} ${l}: ${num(lv)} vs. ${num(pv)} in ${p} (${sgn(lv - pv)}${unit})`;
+  };
+  const avgPts = a => mean(a.map(x => x.pts)), avgMar = a => mean(a.map(x => x.margin));
+  const lgFav = grade(lg.map(x => x.favAtsM)).pct, lgHome = grade(lg.filter(x => !x.neutral).map(x => x.homeAtsM)).pct, lgOu = grade(lg.map(x => x.ouM)).pct;
+  const both = (a, b) => [a, b].filter(Boolean).join('<br>');
   $('#ovKpis').innerHTML = [
-    kpi('Games', g.length.toLocaleString(), `${new Set(g.map(x => x.season)).size} season(s)`),
-    kpi('Points per game', num(mean(g.map(x => x.pts))), `Avg closing total ${num(mean(g.filter(x => x.total != null).map(x => x.total)))}`),
-    kpi('Favorite cover %', pct(fav.pct), `${fav.rec} (W-L-Push)`),
-    kpi('Home cover %', pct(home.pct), `${home.rec} · neutral sites excluded`),
-    kpi('Over %', pct(ou.pct), `${ou.rec} (O-U-Push)`),
-    kpi('Avg margin of victory', num(mean(g.map(x => x.margin))) + ' pts', `${pct(g.filter(x => x.margin <= 7).length / g.length, 0)} decided by ≤ 7`),
+    kpi('Games', g.length.toLocaleString(), `${ss.length} season(s)`, narrowed ? `${pct(g.length / lg.length, 0)} of all ${lg.length.toLocaleString()} league games` : `Full league sample, ${span}`),
+    kpi('Points per game', num(avgPts(g)), `Avg closing total ${num(mean(g.filter(x => x.total != null).map(x => x.total)))}`, both(narrowed ? vsLg(avgPts(g), avgPts(lg), ' pts') : '', prevCmp(avgPts, ' pts'))),
+    kpi('Favorite cover %', pct(fav.pct), `${fav.rec} (W-L-Push)`, both(be(fav.pct), narrowed ? vsLg(fav.pct, lgFav, ' pts', true) : '')),
+    kpi('Home cover %', pct(home.pct), `${home.rec} · neutral sites excluded`, both(be(home.pct), narrowed ? vsLg(home.pct, lgHome, ' pts', true) : '')),
+    kpi('Over %', pct(ou.pct), `${ou.rec} (O-U-Push)`, both(be(ou.pct), narrowed ? vsLg(ou.pct, lgOu, ' pts', true) : '')),
+    kpi('Avg margin of victory', num(avgMar(g)) + ' pts', `${pct(g.filter(x => x.margin <= 7).length / g.length, 0)} decided by ≤ 7`, both(narrowed ? vsLg(avgMar(g), avgMar(lg), ' pts') : '', prevCmp(avgMar, ' pts'))),
   ].join('');
+  renderInsights(GAMES, span);
 
   const A = [];
   // Q1
@@ -564,6 +609,37 @@ function renderOverview(g) {
 
   $('#ovAnswers').innerHTML = A.map((a, i) => `<div class="answer"><div class="q"><span class="num">${i + 1}</span>${a[0]}</div><div class="a">${a[1]}</div><button data-go="${a[2]}">See the charts →</button></div>`).join('');
   document.querySelectorAll('#ovAnswers [data-go]').forEach(b => b.onclick = () => setTab(b.dataset.go));
+}
+
+/* Insights: always computed on the league baseline so the wording stays valid under any filter */
+function renderInsights(lg, span) {
+  $('#insScope').textContent = `· all ${lg.length.toLocaleString()} games, ${span} (not affected by filters)`;
+  const I = [];
+  const bk = BUCKETS.map(([l, lo, hi]) => { const gs = lg.filter(x => x.fav && Math.abs(x.spread) >= lo && Math.abs(x.spread) <= hi); return { l, n: gs.length, c: grade(gs.map(x => x.favAtsM)).pct, w: gs.filter(x => x.favWon === 1).length / gs.length }; }).filter(b => b.n >= 30);
+  const fav = grade(lg.map(x => x.favAtsM));
+  if (bk.length > 1) {
+    const f = bk[0], l = bk[bk.length - 1], cs = bk.map(b => b.c);
+    I.push(['Bigger favorites win more, but they do not cover more', `Favorites' outright win rate goes from <b>${pct(f.w, 0)}</b> (${f.l} pts) to <b>${pct(l.w, 0)}</b> (${l.l} pts), yet their cover rate stays between <b>${pct(Math.min(...cs), 0)}</b> and <b>${pct(Math.max(...cs), 0)}</b> in every spread bucket. Overall, favorites cover <b>${pct(fav.pct)}</b> (${fav.rec}).`,
+      `${fav.pct < BE ? 'Betting favorites blindly loses money: the rate is below the 52.4% needed to break even.' : 'Favorites have cleared break-even in this sample.'} Do not lay a big number just because the team is very likely to win.`, 'lines']);
+  }
+  const ind = lg.filter(x => x.roof && x.indoor), out = lg.filter(x => x.roof && !x.indoor);
+  if (ind.length && out.length) {
+    const io = grade(ind.map(x => x.ouM)), oo = grade(out.map(x => x.ouM)), tl = a => mean(a.filter(x => x.total != null).map(x => x.total));
+    const best = Math.max(io.pct, 1 - io.pct, oo.pct, 1 - oo.pct);
+    I.push(['Indoor games score more, and the line already knows it', `Indoor games average <b>${num(mean(ind.map(x => x.pts)))}</b> points vs. <b>${num(mean(out.map(x => x.pts)))}</b> outdoors, but sportsbooks also set indoor totals higher (<b>${num(tl(ind))}</b> vs. <b>${num(tl(out))}</b>). The over hits <b>${pct(io.pct)}</b> indoors and <b>${pct(oo.pct)}</b> outdoors.`,
+      `${best > BE ? 'One side of this split has cleared break-even, but only narrowly.' : 'No side of the indoor/outdoor split reaches the 52.4% break-even rate.'} The roof alone is not a reason to bet an over or an under.`, 'scoring']);
+  }
+  const nn = lg.filter(x => !x.neutral), home = grade(nn.map(x => x.homeAtsM));
+  I.push(['Home-field advantage is real, and fully priced in', `Home teams win <b>${pct(nn.filter(x => x.result > 0).length / nn.length)}</b> of games by an average of <b>${num(mean(nn.map(x => x.result)))}</b> points, but cover the spread ${home.pct < .5 ? 'only' : 'just'} <b>${pct(home.pct)}</b> of the time (${home.rec}).`,
+    `Being at home helps a team win, not beat the spread. ${home.pct < .5 ? 'Road teams have covered slightly more often.' : 'Home teams have covered slightly more often.'} Do not add points for home field; the line has done it.`, 'lines']);
+  const tr = TEAMS.map(t => { const gr = grade(lg.filter(x => x.home === t || x.away === t).map(x => x.homeAtsM == null ? null : x.home === t ? x.homeAtsM : -x.homeAtsM)); return { t, ...gr }; }).filter(r => r.w + r.l >= 30).sort((a, b) => b.pct - a.pct);
+  if (tr.length > 1) {
+    const top = tr[0], bot = tr[tr.length - 1], above = tr.filter(r => r.pct > BE).length;
+    I.push(['The widest gaps are between teams, not situations', `<b>${top.t}</b> has covered <b>${pct(top.pct)}</b> (${top.rec}) and <b>${bot.t}</b> only <b>${pct(bot.pct)}</b> (${bot.rec}), a ${Math.round((top.pct - bot.pct) * 100)}-point gap. <b>${above} of ${tr.length}</b> teams are above break-even.`,
+      `Team history separates sides far more than home field or spread size. Check a team's favorite and underdog splits and its sample size before leaning on it; long streaks tend to fade as the market adjusts.`, 'teams']);
+  }
+  $('#ovInsights').innerHTML = I.map(a => `<div class="answer"><div class="q">${a[0]}</div><div class="a">${a[1]}</div><div class="imp"><b>What it means:</b> ${a[2]}</div><button data-go="${a[3]}">See the evidence →</button></div>`).join('');
+  document.querySelectorAll('#ovInsights [data-go], .who [data-go]').forEach(b => b.onclick = () => setTab(b.dataset.go));
 }
 
 /* Team ATS */

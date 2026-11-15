@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 640" font-family="Helvetica, Arial, sans-serif" font-size="12">
+<rect width="900" height="640" fill="#ffffff"/>
+<rect x="20" y="16" width="860" height="40" rx="6" fill="#e6f0fc" stroke="#555" stroke-width="1.2"/>
+<text x="450.0" y="40.0" text-anchor="middle" font-weight="bold" fill="#111">Header: NFL EDGE title  |  tabs: Overview · Team ATS · Spreads &amp; Margins · Scoring &amp; Stadiums · Research</text>
+<rect x="20" y="66" width="860" height="44" rx="6" fill="#fff7e0" stroke="#555" stroke-width="1.2"/>
+<text x="450.0" y="82.0" text-anchor="middle" font-weight="bold" fill="#111">Global filters: From season · To season · Regular/Playoffs · Division · Team · Reset</text>
+<text x="450.0" y="100.0" text-anchor="middle" fill="#555" font-size="11">every chart and KPI below recalculates</text>
+<circle cx="20" cy="66" r="11" fill="#2a78d6"/><text x="20" y="70" text-anchor="middle" fill="#fff" font-weight="bold">1</text>
+<rect x="20" y="122" width="860" height="54" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2"/>
+<text x="450.0" y="143.0" text-anchor="middle" font-weight="bold" fill="#111">Who this is for + the 4 decisions it supports</text>
+<text x="450.0" y="161.0" text-anchor="middle" fill="#555" font-size="11">links jump to the tab that answers each decision</text>
+<circle cx="20" cy="122" r="11" fill="#2a78d6"/><text x="20" y="126" text-anchor="middle" fill="#fff" font-weight="bold">2</text>
+<rect x="20.0" y="188" width="137" height="62" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2"/>
+<text x="88.5" y="213.0" text-anchor="middle" font-weight="bold" fill="#111">Games</text>
+<text x="88.5" y="231.0" text-anchor="middle" fill="#555" font-size="11">sample size</text>
+<rect x="164.5" y="188" width="137" height="62" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2"/>
+<text x="233.0" y="213.0" text-anchor="middle" font-weight="bold" fill="#111">Points / game</text>
+<text x="233.0" y="231.0" text-anchor="middle" fill="#555" font-size="11">vs last season</text>
+<rect x="309.0" y="188" width="137" height="62" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2"/>
+<text x="377.5" y="213.0" text-anchor="middle" font-weight="bold" fill="#111">Favorite cover %</text>
+<text x="377.5" y="231.0" text-anchor="middle" fill="#555" font-size="11">vs 52.4%</text>
+<rect x="453.5" y="188" width="137" height="62" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2"/>
+<text x="522.0" y="213.0" text-anchor="middle" font-weight="bold" fill="#111">Home cover %</text>
+<text x="522.0" y="231.0" text-anchor="middle" fill="#555" font-size="11">vs 52.4%</text>
+<rect x="598.0" y="188" width="137" height="62" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2"/>
+<text x="666.5" y="213.0" text-anchor="middle" font-weight="bold" fill="#111">Over %</text>
+<text x="666.5" y="231.0" text-anchor="middle" fill="#555" font-size="11">vs 52.4%</text>
+<rect x="742.5" y="188" width="137" height="62" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2"/>
+<text x="811.0" y="213.0" text-anchor="middle" font-weight="bold" fill="#111">Avg margin</text>
+<text x="811.0" y="231.0" text-anchor="middle" fill="#555" font-size="11">vs last season</text>
+<circle cx="20" cy="188" r="11" fill="#2a78d6"/><text x="20" y="192" text-anchor="middle" fill="#fff" font-weight="bold">3</text>
+<rect x="20" y="262" width="209" height="60" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2"/>
+<text x="124.5" y="286.0" text-anchor="middle" font-weight="bold" fill="#111">Insight 1: favorites</text>
+<text x="124.5" y="304.0" text-anchor="middle" fill="#555" font-size="11">evidence + what it means</text>
+<rect x="237" y="262" width="209" height="60" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2"/>
+<text x="341.5" y="286.0" text-anchor="middle" font-weight="bold" fill="#111">Insight 2: indoor/outdoor</text>
+<text x="341.5" y="304.0" text-anchor="middle" fill="#555" font-size="11">evidence + what it means</text>
+<rect x="454" y="262" width="209" height="60" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2"/>
+<text x="558.5" y="286.0" text-anchor="middle" font-weight="bold" fill="#111">Insight 3: home field</text>
+<text x="558.5" y="304.0" text-anchor="middle" fill="#555" font-size="11">evidence + what it means</text>
+<rect x="671" y="262" width="209" height="60" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2"/>
+<text x="775.5" y="286.0" text-anchor="middle" font-weight="bold" fill="#111">Insight 4: teams</text>
+<text x="775.5" y="304.0" text-anchor="middle" fill="#555" font-size="11">evidence + what it means</text>
+<circle cx="20" cy="262" r="11" fill="#2a78d6"/><text x="20" y="266" text-anchor="middle" fill="#fff" font-weight="bold">4</text>
+<rect x="20" y="334" width="860" height="34" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2"/>
+<text x="450.0" y="355.0" text-anchor="middle" font-weight="bold" fill="#111">Answers to the 7 questions (one line each, update with filters)</text>
+<circle cx="20" cy="334" r="11" fill="#2a78d6"/><text x="20" y="338" text-anchor="middle" fill="#fff" font-weight="bold">5</text>
+<text x="20" y="392" font-weight="bold" fill="#111">Detail tabs (same filter bar on top of each)</text>
+<circle cx="880" cy="388" r="11" fill="#2a78d6"/><text x="880" y="392" text-anchor="middle" fill="#fff" font-weight="bold">6</text>
+<rect x="20" y="402" width="205" height="218" rx="6" fill="#fff" stroke="#555" stroke-width="1.2"/>
+<text x="122.5" y="515.0" text-anchor="middle" font-weight="bold" fill="#111">Team ATS</text>
+<rect x="32" y="440" width="181" height="100" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="122.5" y="484.0" text-anchor="middle" font-weight="bold" fill="#111">Ranked horizontal bars</text>
+<text x="122.5" y="502.0" text-anchor="middle" fill="#555" font-size="11">cover % by team, 50% line</text>
+<rect x="32" y="548" width="181" height="60" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="122.5" y="572.0" text-anchor="middle" font-weight="bold" fill="#111">Sortable table</text>
+<text x="122.5" y="590.0" text-anchor="middle" fill="#555" font-size="11">W-L-P, fav/dog splits</text>
+<rect x="238" y="402" width="205" height="218" rx="6" fill="#fff" stroke="#555" stroke-width="1.2"/>
+<text x="340.5" y="515.0" text-anchor="middle" font-weight="bold" fill="#111">Spreads &amp; Margins</text>
+<rect x="250" y="440" width="181" height="50" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="340.5" y="459.0" text-anchor="middle" font-weight="bold" fill="#111">Grouped bars</text>
+<text x="340.5" y="477.0" text-anchor="middle" fill="#555" font-size="11">cover % vs win % by spread</text>
+<rect x="250" y="496" width="181" height="50" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="340.5" y="515.0" text-anchor="middle" font-weight="bold" fill="#111">Bars by role + by season</text>
+<text x="340.5" y="533.0" text-anchor="middle" fill="#555" font-size="11">home field advantage</text>
+<rect x="250" y="552" width="181" height="56" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="340.5" y="574.0" text-anchor="middle" font-weight="bold" fill="#111">Bars + line by week</text>
+<text x="340.5" y="592.0" text-anchor="middle" fill="#555" font-size="11">margin of victory</text>
+<rect x="456" y="402" width="205" height="218" rx="6" fill="#fff" stroke="#555" stroke-width="1.2"/>
+<text x="558.5" y="515.0" text-anchor="middle" font-weight="bold" fill="#111">Scoring &amp; Stadiums</text>
+<rect x="468" y="440" width="181" height="50" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="558.5" y="459.0" text-anchor="middle" font-weight="bold" fill="#111">Line chart by season</text>
+<text x="558.5" y="477.0" text-anchor="middle" fill="#555" font-size="11">points vs closing total</text>
+<rect x="468" y="496" width="181" height="50" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="558.5" y="525.0" text-anchor="middle" font-weight="bold" fill="#111">Indoor vs outdoor tiles + bars</text>
+<rect x="468" y="552" width="181" height="56" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="558.5" y="574.0" text-anchor="middle" font-weight="bold" fill="#111">Stadium table</text>
+<text x="558.5" y="592.0" text-anchor="middle" fill="#555" font-size="11">sortable, searchable</text>
+<rect x="674" y="402" width="206" height="218" rx="6" fill="#fff" stroke="#555" stroke-width="1.2"/>
+<text x="777.0" y="515.0" text-anchor="middle" font-weight="bold" fill="#111">Research</text>
+<rect x="686" y="440" width="182" height="70" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="777.0" y="469.0" text-anchor="middle" font-weight="bold" fill="#111">Matchup lookup</text>
+<text x="777.0" y="487.0" text-anchor="middle" fill="#555" font-size="11">teams + spread + total inputs</text>
+<rect x="686" y="516" width="182" height="40" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="777.0" y="540.0" text-anchor="middle" font-weight="bold" fill="#111">Similar lines · team cards · H2H</text>
+<rect x="686" y="562" width="182" height="46" rx="6" fill="#f4f4f2" stroke="#555" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="777.0" y="579.0" text-anchor="middle" font-weight="bold" fill="#111">Game log</text>
+<text x="777.0" y="597.0" text-anchor="middle" fill="#555" font-size="11">search, filters, CSV</text>
+</svg>
