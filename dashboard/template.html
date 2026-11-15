@@ -552,7 +552,7 @@ function renderOverview(g) {
   const prevCmp = (fn, unit) => {                      // latest season in view vs. the one before it
     if (ss.length < 2) return '';
     const l = ss[ss.length - 1], p = ss[ss.length - 2];
-    const lv = fn(g.filter(x => x.season === l)), pv = fn(g.filter(x => x.season === p));
+    const lv = +fn(g.filter(x => x.season === l)).toFixed(1), pv = +fn(g.filter(x => x.season === p)).toFixed(1);
     return `${arrow(lv - pv)} ${l}: ${num(lv)} vs. ${num(pv)} in ${p} (${sgn(lv - pv)}${unit})`;
   };
   const avgPts = a => mean(a.map(x => x.pts)), avgMar = a => mean(a.map(x => x.margin));
