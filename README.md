@@ -7,15 +7,17 @@ Built with Python, Streamlit, Pandas and Plotly.
 
 ## Standalone HTML dashboard
 
-`dashboard/nfl_dashboard.html` is a single self-contained file (data and charting library embedded) that opens in any browser, with no Python or internet needed. It is organised around seven questions:
+`dashboard/nfl_dashboard.html` is a single self-contained file (data and charting library embedded) that opens in any browser, with no Python or internet needed. It is built for NFL bettors, new or experienced, who want to see historical trends against the betting line, and is organised around three opening questions that drill down into the seven original ones:
 
-| Tab | Questions answered |
-|---|---|
-| Overview | Headline KPIs, a one-line answer to each question, metric definitions |
-| Team ATS | 1. Which teams cover the spread most often (all games / as favorite / as underdog)? |
-| Spreads & Margins | 5. Favorite cover rate by spread size. 7. Home teams vs. favorites, home-field advantage. 3. Margin by game type. 6. Margin by week of the season |
-| Scoring & Stadiums | 2. Indoor vs. outdoor totals and over/under, by stadium. 4. Is league scoring rising or falling? |
-| Research | Matchup lookup (enter a matchup, spread and total to see how both teams, head-to-head meetings and similar lines have turned out) and a searchable, downloadable game log |
+| Tab | Opens with | Then drills into |
+|---|---|---|
+| Overview | Who it is for, headline KPIs, the three opening questions with live answers, four takeaways | Links into each question |
+| The Spread | Does either side of the spread win more often than it should? | Spread size, home field; then team-by-team and exact-spread tables |
+| Totals | Is NFL scoring rising or falling, and do the totals keep pace? | Indoor vs. outdoor, size of the total; then stadium and team scoring tables |
+| Margins | How close is a typical NFL game? | Game type, time of season; then game-type and season breakdowns |
+| Research | Matchup lookup for a specific game and line | Head-to-head history and the full game log |
+
+Each question shows a one-sentence answer that recalculates with the filters, with the chart or table underneath. See `docs/DASHBOARD_PLAN.md` for the full question framework, KPI definitions and accuracy check.
 
 Global filters: season range, regular season / playoffs, division, team. Pushes are excluded from cover % and over % and shown in the W-L-P record.
 
