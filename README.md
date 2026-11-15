@@ -15,9 +15,9 @@ Built with Python, Streamlit, Pandas and Plotly.
 | The Spread | Does either side of the spread win more often than it should? | Spread size, home field; then team-by-team and exact-spread tables |
 | Totals | Is NFL scoring rising or falling, and do the totals keep pace? | Indoor vs. outdoor, size of the total; then stadium and team scoring tables |
 | Margins | How close is a typical NFL game? | Game type, time of season; then game-type and season breakdowns |
-| Research | Matchup lookup for a specific game and line | Head-to-head history and the full game log |
+| Research | Matchup lookup for a specific game and line | Compare two teams or two periods side by side; the full game log |
 
-Each question shows a one-sentence answer that recalculates with the filters, with the chart or table underneath. See `docs/DASHBOARD_PLAN.md` for the full question framework, KPI definitions and accuracy check.
+Each question shows a one-sentence answer that recalculates with the filters, with the chart or table underneath. Differences are labelled "could be chance" or "more than chance" (95% level). See `docs/DASHBOARD_PLAN.md` for the full question framework, KPI definitions and accuracy check.
 
 Global filters: season range, regular season / playoffs, division, team. Pushes are excluded from cover % and over % and shown in the W-L-P record.
 

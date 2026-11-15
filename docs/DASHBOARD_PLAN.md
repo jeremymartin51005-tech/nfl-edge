@@ -26,7 +26,7 @@ The seven original questions were reworded and regrouped. The number in brackets
 |---|---|---|
 | 1 Big picture | Does either side of the spread win more often than it should? [7] | Cover % for favorites, underdogs, home and away teams against 50% and the 52.4% break-even |
 | 2 Driver | Does a bigger spread make the favorite more or less likely to cover? [5] | Favorite cover % and win % by spread bucket |
-| 2 Driver | How much is home field worth, and is it already in the line? [7] | Home margin and home cover % by season; cover % for home/road favorites and underdogs |
+| 2 Driver | How much is home field worth, and is it already in the line? [7] | One chart: average home margin vs. the average home spread, by season |
 | 3 Detail | Which teams have covered most and least often, as favorites and as underdogs? [1] | Ranked team chart with all / favorite / underdog switch; sortable team table |
 | 3 Detail | How have favorites done at each exact spread? [5] | Table with one row per closing spread |
 
@@ -83,7 +83,8 @@ Supporting definitions: favorite = side favored by the closing spread (moneyline
 | **Benchmark: league baseline** (all teams, all seasons, same regular/playoff setting) | Every KPI, shown whenever a filter narrows the games | Shows whether a team, division or season is unusual |
 | **Previous period: prior season** | Points per game, Avg margin of victory | Shows the direction of the trend |
 | **50% reference line** | All cover % and over % charts | Coin-flip baseline |
-| **Sample size (n, W-L-P, "small sample" tag under 30 games)** | Charts, tables, Research tab | Stops small samples being read as trends |
+| **Chance test ("could be chance" / "more than chance")** | Every answer line that compares two groups, team and spread tables, chart hovers, Research and Compare | Separates real differences from noise; small samples fail the test on their own |
+| **Sample size (n, W-L-P)** | Charts, tables, Research tab | Shows how much data sits behind each rate |
 
 ## 5. Required features
 
@@ -91,8 +92,9 @@ Supporting definitions: favorite = side favored by the closing spread (moneyline
 |---|---|
 | ≥ 4 labeled KPIs with units and context | 6 on Overview with benchmark lines; 5 more on each of The Spread, Totals and Margins |
 | ≥ 4 different, purposeful visualizations | Horizontal bars (cover % by side, by team), grouped bars (cover % vs. win % by spread), line charts (points vs. total by season; margin by week), histogram (final margins), category bars (roof, total size, game type), comparison tiles (indoor vs. outdoor), sortable tables (teams, exact spreads, stadiums, team scoring, game types, seasons, game log) |
+| Comparing teams, seasons and outcomes (instructor feedback) | Research → Compare puts two teams or two periods side by side, with the difference and a chance test on each row |
 | ≥ 2 filters that recalculate charts and KPIs | 5 global filters (from season, to season, regular/playoffs, division, team) plus per-section controls (favorite/underdog switch, min games, search, outcome filters, matchup inputs) |
-| Visual design | One filter bar; one tab per question; the same three-level layout on every question tab; three series colors with fixed meaning; light and dark themes |
+| Visual design | "?" hints define each metric where it appears; one filter bar; one tab per question; the same three-level layout on every question tab; three series colors with fixed meaning; light and dark themes |
 | ≥ 3 evidence-based insights | 4 on the Overview, each with the numbers and a "what it means" implication (section 6) |
 | Accuracy check | 19 values checked independently, including 3 filter combinations (section 7) |
 
@@ -129,6 +131,15 @@ Supporting definitions: favorite = side favored by the closing spread (moneyline
 | 18 | Home cover % | same | 50.7% (140-136-1) | 50.7 (140-136-1) | ✔ |
 | 19 | Avg margin of victory | same | 11.1 | 11.1 | ✔ |
 
+Chance labels were also re-derived by hand from the same counts (z-scores, 95% level = 1.96):
+
+| Comparison | Independent z | Dashboard label | Match |
+|---|---|---|---|
+| Underdog cover % vs. 50% (922-868) | 1.28 | could be chance | ✔ |
+| Indoor vs. outdoor points per game | 5.37 | more than chance | ✔ |
+| Early (weeks 1–6) vs. late (13–18) margin | 1.78 | could be chance | ✔ |
+| Favorite cover %, 2020–22 vs. 2023–26 (Compare) | −2.43 | more than chance | ✔ |
+
 Filter behaviour also checked: Reset returns to 1,829 games; choosing a "from" season later than "to" moves the other end; a combination with no games (for example playoffs + NYJ) shows empty states instead of errors; every tab renders without script errors under each combination above.
 
 ### Limitations
@@ -136,7 +147,8 @@ Filter behaviour also checked: Reset returns to 1,829 games; choosing a "from" s
 - **Closing lines only.** One consensus closing spread and total per game; no opening lines, line movement or sportsbook-specific prices.
 - **Break-even assumes −110** on both sides; actual prices vary.
 - **Partial current season.** 2026 is in progress, so its season-level figures rest on fewer games.
-- **Small samples.** Single seasons, playoffs, or one team in one role can be a handful of games; these are flagged but still shown.
+- **Small samples.** Single seasons, playoffs, or one team in one role can be a handful of games; they are shown and labelled "could be chance".
+- **Chance test.** A two-sided normal approximation at the 95% level. "Could be chance" means luck cannot be ruled out, not that no effect exists. Many groups are tested at once (32 teams, 38 spreads), so a few will pass by luck; the dashboard says so next to the team table.
 - **Team and division filters keep games *involving* the team or division**, so league-wide KPIs under those filters include the opponents' side of each game. Team-by-team tables use the filters to choose and highlight teams instead.
 - **Divisions use the current alignment**, which is correct for all seasons shown.
 - **Descriptive, not predictive.** No model, no adjustment for injuries, weather or roster changes.
