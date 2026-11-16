@@ -675,7 +675,7 @@ function renderOverview(g) {
     if (ss.length < 2) return '';
     const l = ss[ss.length - 1], p = ss[ss.length - 2];
     const lv = +fn(g.filter(x => x.season === l)).toFixed(1), pv = +fn(g.filter(x => x.season === p)).toFixed(1);
-    return `${arrow(lv - pv)} ${sgn(lv - pv)} vs. ${p} (${num(pv)})`;
+    return `${l} alone: ${num(lv)}, ${arrow(lv - pv)} ${sgn(lv - pv)} vs. ${p} (${num(pv)})`;
   };
   const avgPts = a => mean(a.map(x => x.pts)), avgMar = a => mean(a.map(x => x.margin));
   const lgFav = grade(lg.map(x => x.favAtsM)).pct, lgHome = grade(lg.filter(x => !x.neutral).map(x => x.homeAtsM)).pct, lgOu = grade(lg.map(x => x.ouM)).pct;
