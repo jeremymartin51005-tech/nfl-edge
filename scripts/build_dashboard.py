@@ -54,7 +54,8 @@ def _num(x):
     return int(f) if f.is_integer() else f
 
 
-def main() -> None:
+def payload() -> dict:
+    """Clean games.csv and return the compact data object the dashboard reads."""
     raw = pd.read_csv(GAMES_FILE, low_memory=False)
     g, rep = build_games(raw)
     rows = []
@@ -71,7 +72,7 @@ def main() -> None:
     unknown = (set(g["home_team"]) | set(g["away_team"])) - teams
     if unknown:
         raise SystemExit(f"Teams missing from DIVISIONS: {sorted(unknown)}")
-    payload = {
+    return {
         "columns": COLUMNS,
         "games": rows,
         "divisions": DIVISIONS,
@@ -83,7 +84,12 @@ def main() -> None:
             "lastGame": g["date"].max().strftime("%Y-%m-%d"),
         },
     }
-    data = json.dumps(payload, separators=(",", ":"))
+
+
+def main() -> None:
+    data = payload()
+    rows = data["games"]
+    data = json.dumps(data, separators=(",", ":"))
     html = TEMPLATE.read_text(encoding="utf-8").replace("/*__DATA__*/null", data)
     html = html.replace("/*__CHARTJS__*/", CHARTJS.read_text(encoding="utf-8").replace("</script>", "<\\/script>"))
     OUT.write_text(html, encoding="utf-8")

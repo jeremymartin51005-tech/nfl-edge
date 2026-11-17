@@ -21,6 +21,14 @@ Each question shows a one-sentence answer that recalculates with the filters, wi
 
 Global filters: season range, regular season / playoffs, division, team. Pushes are excluded from cover % and over % and shown in the W-L-P record.
 
+### Downloadable multi-file version
+
+`dist/nfl-edge-dashboard.zip` holds the same dashboard split into separate files (`index.html`, `css/`, `js/`, `data/`), unpacked in `site/`. Unzip and open `index.html`, or upload the folder's contents to any static host such as GitHub Pages. Rebuild both with:
+
+```bash
+python scripts/build_site.py
+```
+
 ### Automatic updates and hosting
 
 `.github/workflows/update-dashboard.yml` runs every Tuesday morning (and on every push to `main`, or on demand from the Actions tab). It downloads the latest nflverse game file, rebuilds the dashboard, commits the refreshed data and publishes the dashboard to GitHub Pages.

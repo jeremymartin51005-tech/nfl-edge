@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NFL Edge Dashboard</title>
+<script src="js/vendor/chart.umd.js"></script>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div class="logo" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M2 13 L7 6 L10.5 9.5 L16 3" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="brand">
+        <h1>NFL EDGE</h1>
+        <p>Historical NFL results vs. closing betting lines</p>
+      </div>
+      <div class="sp"></div>
+      <button class="icon-btn" id="themeBtn" title="Toggle light / dark">Light / dark</button>
+    </div>
+    <nav class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
+      <button role="tab" data-tab="spreads">The Spread</button>
+      <button role="tab" data-tab="totals">Totals</button>
+      <button role="tab" data-tab="margins">Margins</button>
+      <button role="tab" data-tab="research">Research</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="filters" id="filters">
+    <div class="presets"><span>Quick range</span><div class="seg" id="presets">
+      <button aria-pressed="true" data-n="0">All seasons</button><button aria-pressed="false" data-n="3">Last 3</button><button aria-pressed="false" data-n="1">This season</button></div></div>
+    <div class="f"><label for="fFrom">From season</label><select id="fFrom"></select></div>
+    <div class="f"><label for="fTo">To season</label><select id="fTo"></select></div>
+    <div class="f"><label for="fType">Games</label>
+      <select id="fType"><option value="all">Regular + playoffs</option><option value="REG">Regular season</option><option value="POST">Playoffs only</option></select></div>
+    <div class="f"><label for="fDiv">Division</label><select id="fDiv"></select></div>
+    <div class="f"><label for="fTeam">Team</label><select id="fTeam"></select></div>
+    <button class="reset" id="resetBtn">Reset filters</button>
+  </div>
+  <div class="summary" id="summary"></div>
+
+  <!-- OVERVIEW -->
+  <section class="page on" id="p-overview">
+    <p class="lede">For <b>NFL bettors, new or experienced</b>, who want to see what has actually happened against the betting line. Use it to weigh
+      <button data-go="spreads">favorite or underdog</button> <button data-go="totals">over or under</button> <button data-go="margins">how close a game will be</button> <button data-go="research">a specific matchup</button></p>
+    <div class="kpis" id="ovKpis"></div>
+    <div class="section-title">Start with a question</div>
+    <div class="grid g3" id="ovMap"></div>
+    <div class="section-title">Four takeaways <span style="text-transform:none;letter-spacing:0;font-weight:500" id="insScope"></span></div>
+    <div class="answers" id="ovInsights"></div>
+    <details class="defs">
+      <summary>New to betting? Six terms in plain words</summary>
+      <dl>
+        <dt>Point spread</dt><dd>The number of points the favorite is expected to win by. "Chiefs −3" means the Chiefs are favored by 3.</dd>
+        <dt>Covering the spread</dt><dd>A favorite covers by winning by <b>more</b> than the spread. An underdog covers by losing by less than the spread, or by winning.</dd>
+        <dt>Total (over/under)</dt><dd>The expected combined score of both teams. You bet on the real score going <b>over</b> or <b>under</b> that number.</dd>
+        <dt>Push</dt><dd>The result lands exactly on the number, so the bet is refunded. Pushes are left out of every percentage here.</dd>
+        <dt>Break-even (52.4%)</dt><dd>Because sportsbooks charge a fee, a bet has to win about 52.4% of the time just to break even. 50% loses money.</dd>
+        <dt>W-L-P</dt><dd>A record shown as wins, losses and pushes, for example 64-44-3.</dd>
+      </dl>
+    </details>
+    <details class="defs">
+      <summary>How each metric is calculated</summary>
+      <dl>
+        <dt>Cover % (ATS)</dt><dd>Covers ÷ (covers + non-covers). <b>Pushes are left out</b> of the percentage and shown separately in the record (W-L-P). 52.4% is roughly the break-even rate at standard −110 odds.</dd>
+        <dt>Over %</dt><dd>Overs ÷ (overs + unders). Pushes (final total exactly equal to the line) are left out and shown in the record.</dd>
+        <dt>Favorite / Underdog</dt><dd>The side favored by the closing point spread. If the spread is 0 (pick'em), the team with the shorter moneyline is the favorite.</dd>
+        <dt>Spread &amp; totals</dt><dd>One consensus <b>closing</b> line per game from the nflverse dataset. No opening lines are available.</dd>
+        <dt>Margin of victory</dt><dd>Absolute point difference between the two teams. Ties count as 0.</dd>
+        <dt>Home-field advantage</dt><dd>Average home score minus away score. Neutral-site games (international games, Super Bowls) are excluded from all home/away stats.</dd>
+        <dt>Indoor / Outdoor</dt><dd>Indoor = dome or retractable roof closed. Outdoor = open-air stadium or retractable roof open.</dd>
+        <dt>Prime time</dt><dd>Kickoff at 7:00 PM ET or later (Thursday, Sunday and Monday night games, plus late Saturday/holiday games).</dd>
+        <dt>Divisional game</dt><dd>Both teams are in the same division (current 8-division alignment).</dd>
+        <dt>Points per game</dt><dd>Home score + away score, averaged over games (points per game). All completed games included.</dd>
+        <dt>Benchmarks</dt><dd>Cover % and Over % are compared with the <b>52.4% break-even</b> rate. When a filter narrows the games, each metric is also compared with the <b>league baseline</b> (all teams, all seasons, same regular-season/playoff setting). Points and margin are compared with the <b>previous season</b> in view.</dd>
+        <dt>Chance test</dt><dd>Each cover % and over % is tested against 50%, and each headline comparison (indoor vs. outdoor, divisional vs. not, early vs. late season, small vs. large spreads) is tested for a difference, using a two-sided normal approximation at the 95% level. "Could be chance" means the data cannot rule out luck; it does not prove there is no effect. Testing many groups at once will flag a few by luck.</dd>
+        <dt>Limitations</dt><dd>Closing lines only (no opening lines or line movement); one consensus line, not a specific sportsbook; standard −110 pricing assumed for break-even; the current season is partial; small samples (single seasons, playoffs, one team in one role) are noisy and are labelled "could be chance". Past results describe what happened and do not predict future games.</dd>
+        <dt>Team / Division filters</dt><dd>Keep only games involving that team (or any team in that division). In team-by-team tables they instead choose which teams appear and highlight the selected team.</dd>
+      </dl>
+    </details>
+  </section>
+
+  <!-- SPREADS -->
+  <section class="page" id="p-spreads">
+    <div class="intro"><h2>The spread</h2>
+      <p>Who covers, and why. Start with whether any side has an edge, then see how spread size and home field explain it, then go team by team.</p>
+      <button class="btn xall" data-xall>Open all</button></div>
+    <div class="kpis" id="hfKpis"></div>
+
+    <div class="level"><span>1</span>Big picture</div>
+    <details class="qa big" id="q-sides" open><summary></summary><div class="qa-body">
+      <p class="sub">Cover % by side. Dashed line = 50%. Axis runs 30–70% so small gaps are visible. Neutral-site games are left out of home and away.</p>
+      <div class="chart" style="height:210px"><canvas id="cSides"></canvas></div>
+    </div></details>
+
+    <div class="level"><span>2</span>What drives it</div>
+    <details class="qa" id="q-size" open><summary></summary><div class="qa-body">
+      <div class="legend"><span><i style="background:var(--s1)"></i>Favorite cover %</span><span><i style="background:var(--s2)"></i>Favorite win % (outright)</span></div>
+      <div class="chart"><canvas id="cSpread"></canvas></div>
+      <p class="note">Buckets are the favorite's closing spread in points; n = games in each bucket. Dashed line = 50%.</p>
+    </div></details>
+    <details class="qa" id="q-hfa" open><summary></summary><div class="qa-body">
+      <div class="legend"><span><i style="background:var(--s1)"></i>What happened: avg home margin (pts)</span><span><i style="background:var(--s2)"></i>What the line expected: avg home spread (pts)</span></div>
+      <div class="chart" style="height:250px"><canvas id="cHfa"></canvas></div>
+      <p class="note">One pair of bars per season. Where the two bars are level, the spread priced home field correctly. Hover a season for its home cover %.</p>
+    </div></details>
+
+    <div class="level"><span>3</span>The detail</div>
+    <details class="qa" id="q-teams"><summary></summary><div class="qa-body">
+      <div class="toolbar">
+        <div class="seg" id="teamRole">
+          <button aria-pressed="true" data-v="all">All games</button>
+          <button aria-pressed="false" data-v="fav">As favorite</button>
+          <button aria-pressed="false" data-v="dog">As underdog</button>
+        </div>
+        <span class="hint" id="teamChartSub"></span>
+      </div>
+      <div class="grid g2" style="align-items:start">
+        <div><div class="chart tall"><canvas id="cTeams"></canvas></div></div>
+        <div><div class="tbl-wrap" id="teamTable"></div>
+          <p class="note">"More than chance" means a record that far from 50-50 is unlikely to be luck (95% confidence). With 32 teams tested, expect one or two to pass by luck alone.</p></div>
+      </div>
+    </div></details>
+    <details class="qa" id="q-exact"><summary></summary><div class="qa-body">
+      <p class="sub">One row per closing spread. Sort by any column.</p>
+      <div class="tbl-wrap" id="exactTable"></div>
+    </div></details>
+  </section>
+
+  <!-- TOTALS -->
+  <section class="page" id="p-totals">
+    <div class="intro"><h2>Totals</h2>
+      <p>How many points get scored, and whether the over/under line keeps up. Start with the league trend, then the roof and the size of the total, then individual stadiums and teams.</p>
+      <button class="btn xall" data-xall>Open all</button></div>
+    <div class="kpis" id="totKpis"></div>
+
+    <div class="level"><span>1</span>Big picture</div>
+    <details class="qa big" id="q-trend" open><summary></summary><div class="qa-body">
+      <div class="legend"><span><i class="line" style="background:var(--s1)"></i>Points actually scored per game</span><span><i class="line" style="background:var(--s2)"></i>Avg closing total</span></div>
+      <div class="chart"><canvas id="cTrend"></canvas></div>
+      <p class="note" id="trendNote"></p>
+    </div></details>
+
+    <div class="level"><span>2</span>What drives it</div>
+    <details class="qa" id="q-roof" open><summary></summary><div class="qa-body">
+      <div class="grid g2">
+        <div class="vs" id="vsTiles"></div>
+        <div><div class="legend"><span><i style="background:var(--s1)"></i>Avg points scored</span><span><i style="background:var(--s2)"></i>Avg closing total</span></div>
+          <div class="chart" style="height:200px"><canvas id="cRoof"></canvas></div></div>
+      </div>
+    </div></details>
+    <details class="qa" id="q-tsize" open><summary></summary><div class="qa-body">
+      <div class="legend"><span><i style="background:var(--s1)"></i>Over % by size of the closing total</span></div>
+      <div class="chart" style="height:240px"><canvas id="cTot"></canvas></div>
+    </div></details>
+
+    <div class="level"><span>3</span>The detail</div>
+    <details class="qa" id="q-stadiums"><summary></summary><div class="qa-body">
+      <div class="toolbar"><div class="f"><label for="stMin">Min games</label><select id="stMin"><option>1</option><option>5</option><option selected>10</option><option>20</option></select></div>
+        <div class="f"><label for="stSearch">Search</label><input id="stSearch" placeholder="Stadium or team…"></div></div>
+      <div class="tbl-wrap" id="stadiumTable"></div>
+    </div></details>
+    <details class="qa" id="q-teampts"><summary></summary><div class="qa-body">
+      <p class="sub">Per team, over the selected seasons. The Division filter limits the list.</p>
+      <div class="tbl-wrap" id="teamPtsTable"></div>
+    </div></details>
+  </section>
+
+  <!-- MARGINS -->
+  <section class="page" id="p-margins">
+    <div class="intro"><h2>Margin of victory</h2>
+      <p>How close games are, and what changes that. Start with the typical margin, then compare game types and the time of season, then the full breakdowns.</p>
+      <button class="btn xall" data-xall>Open all</button></div>
+    <div class="kpis" id="marKpis"></div>
+
+    <div class="level"><span>1</span>Big picture</div>
+    <details class="qa big" id="q-close" open><summary></summary><div class="qa-body">
+      <div class="legend"><span><i style="background:var(--s1)"></i>Share of games by final margin</span><span><i style="background:var(--s2)"></i>Key numbers 3 and 7</span></div>
+      <div class="chart" style="height:260px"><canvas id="cHist"></canvas></div>
+    </div></details>
+
+    <div class="level"><span>2</span>What drives it</div>
+    <details class="qa" id="q-type" open><summary></summary><div class="qa-body">
+      <p class="sub">Average points between winner and loser. Paired bars share a color: divisional vs. not, prime time vs. day, regular season vs. playoffs.</p>
+      <div class="chart"><canvas id="cCtx"></canvas></div>
+    </div></details>
+    <details class="qa" id="q-week" open><summary></summary><div class="qa-body">
+      <div class="kpis" id="phaseKpis" style="margin-bottom:10px"></div>
+      <p class="sub">Blue = regular-season weeks, orange = playoff rounds. Dashed line = regular-season average.</p>
+      <div class="chart"><canvas id="cWeek"></canvas></div>
+    </div></details>
+
+    <div class="level"><span>3</span>The detail</div>
+    <details class="qa" id="q-typetable"><summary></summary><div class="qa-body">
+      <p class="sub">One score = decided by 7 or fewer. Blowout = decided by 17 or more.</p>
+      <div class="tbl-wrap" id="typeTable"></div>
+    </div></details>
+    <details class="qa" id="q-phase"><summary></summary><div class="qa-body">
+      <p class="sub">Average margin in points by part of the season. Early = weeks 1–6, mid = 7–12, late = 13–18.</p>
+      <div class="tbl-wrap" id="phaseTable"></div>
+    </div></details>
+  </section>
+
+  <!-- RESEARCH -->
+  <section class="page" id="p-research">
+    <div class="toolbar"><div class="seg" id="rsMode">
+      <button aria-pressed="true" data-v="matchup">Matchup lookup</button>
+      <button aria-pressed="false" data-v="compare">Compare</button>
+      <button aria-pressed="false" data-v="log">Game log</button></div></div>
+    <div id="rsPane">
+    <div class="intro"><h2>Matchup research</h2>
+      <p>Thinking about a bet? Enter the game and the line you are being offered. The dashboard pulls up how these teams, and games with similar lines, have actually turned out. Uses the Season and Games filters above.</p></div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="toolbar" style="margin-bottom:0">
+        <div class="f"><label for="rsAway">Away team</label><select id="rsAway"></select></div>
+        <div class="f"><label for="rsHome">Home team</label><select id="rsHome"></select></div>
+        <div class="f"><label for="rsSpread">Home team spread</label><input id="rsSpread" type="number" step="0.5" value="-2.5" style="width:130px"></div>
+        <div class="f"><label for="rsTotal">Over / under total</label><input id="rsTotal" type="number" step="0.5" value="46.5" style="width:130px"></div>
+        <span class="hint" id="rsLine" style="align-self:flex-end;padding-bottom:7px"></span>
+      </div>
+      <p class="note">Spread uses sportsbook notation for the home team: <b>−3</b> means the home team is favored by 3, <b>+3</b> means the home team is a 3-point underdog.</p>
+    </div>
+    <div class="section-title">How similar lines have turned out</div>
+    <div class="grid g2" id="rsMarket"></div>
+    <div class="section-title">The two teams</div>
+    <div class="grid g2" id="rsTeams"></div>
+    <div class="card" style="margin-top:14px"><h3 id="rsH2hTitle">Head to head</h3><p class="sub" id="rsH2hSub"></p><div class="tbl-wrap" id="rsH2h"></div></div>
+    <div class="card" style="margin-top:14px"><h3>How to read this</h3>
+      <ul style="margin:8px 0 0;padding-left:18px;color:var(--text-2);font-size:13px;line-height:1.6">
+        <li><b>52.4%</b> is the break-even win rate at standard −110 odds. A side has to win more often than that to make money. Rates are tagged <span class="pill good">above break-even</span>, <span class="pill bad">below 47.6%</span> (the other side is above break-even) or <span class="pill mute">coin flip</span>.</li>
+        <li><b>Is it more than luck?</b> <span class="pill mute">could be chance</span> means the record is close enough to 50-50 that luck alone could produce it; a 7-3 record is not a trend. <span class="pill">more than chance</span> means it is unlikely to be luck (95% confidence).</li>
+        <li><b>The line already knows.</b> Sportsbooks set lines using this same history, which is why most rates sit near 50%. Past results describe what happened; they do not predict the next game.</li>
+      </ul></div>
+    </div>
+    <div id="cmPane" hidden>
+      <div class="intro"><h2>Compare side by side</h2>
+        <p>Put two teams, or two periods, next to each other. Pick the same team twice with different seasons to compare periods, or "All teams" to compare the league across periods. Uses the Games filter above.</p></div>
+      <div class="card">
+        <div class="grid g2">
+          <div class="toolbar" style="margin:0"><span class="pill" style="align-self:flex-end;margin-bottom:6px">A</span>
+            <div class="f"><label for="cmTeamA">Team</label><select id="cmTeamA"></select></div>
+            <div class="f"><label for="cmFromA">From</label><select id="cmFromA"></select></div>
+            <div class="f"><label for="cmToA">To</label><select id="cmToA"></select></div></div>
+          <div class="toolbar" style="margin:0"><span class="pill" style="align-self:flex-end;margin-bottom:6px">B</span>
+            <div class="f"><label for="cmTeamB">Team</label><select id="cmTeamB"></select></div>
+            <div class="f"><label for="cmFromB">From</label><select id="cmFromB"></select></div>
+            <div class="f"><label for="cmToB">To</label><select id="cmToB"></select></div></div>
+        </div>
+        <div class="tbl-wrap" id="cmTable" style="margin-top:14px"></div>
+        <p class="note" id="cmNote"></p>
+      </div>
+    </div>
+    <div id="lgPane" hidden>
+    <div class="intro"><h2>Game log</h2><p>Every game in the current filters. Search by team or stadium, narrow by betting outcome, and download the result as CSV.</p></div>
+    <div class="card">
+      <div class="toolbar">
+        <div class="f"><label for="lgSearch">Search</label><input id="lgSearch" placeholder="e.g. KC, Lambeau…"></div>
+        <div class="f"><label for="lgAts">Spread result</label><select id="lgAts"><option value="">Any</option><option value="fav">Favorite covered</option><option value="dog">Underdog covered</option><option value="push">Push</option><option value="home">Home covered</option><option value="away">Away covered</option></select></div>
+        <div class="f"><label for="lgOu">Over / under</label><select id="lgOu"><option value="">Any</option><option>Over</option><option>Under</option><option>Push</option></select></div>
+        <div class="f"><label for="lgVenue">Venue</label><select id="lgVenue"><option value="">Any</option><option value="in">Indoor</option><option value="out">Outdoor</option></select></div>
+        <div class="f"><label for="lgCtx">Game type</label><select id="lgCtx"><option value="">Any</option><option value="div">Divisional</option><option value="nondiv">Non-divisional</option><option value="prime">Prime time</option><option value="post">Playoffs</option></select></div>
+        <button class="btn" id="lgCsv" style="align-self:flex-end">Download CSV</button>
+      </div>
+      <div class="tbl-wrap" id="logTable"></div>
+    </div>
+    </div>
+  </section>
+  <p class="note" id="footer"></p>
+</div>
+
+<script src="data/games.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
